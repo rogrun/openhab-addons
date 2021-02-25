@@ -25,6 +25,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.telenot.internal.handler.EMAStateHandler;
 import org.openhab.binding.telenot.internal.handler.IPBridgeHandler;
+import org.openhab.binding.telenot.internal.handler.MBHandler;
 import org.openhab.binding.telenot.internal.handler.MPHandler;
 import org.openhab.binding.telenot.internal.handler.SBHandler;
 import org.openhab.binding.telenot.internal.handler.TelenotBridgeHandler;
@@ -51,8 +52,9 @@ import org.slf4j.LoggerFactory;
 @Component(configurationPid = "binding.telenot", service = ThingHandlerFactory.class)
 public class TelenotHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.unmodifiableSet(Stream
-            .of(THING_TYPE_IPBRIDGE, THING_TYPE_SB, THING_TYPE_MP, THING_TYPE_EMA_STATE).collect(Collectors.toSet()));
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.unmodifiableSet(
+            Stream.of(THING_TYPE_IPBRIDGE, THING_TYPE_SB, THING_TYPE_MP, THING_TYPE_MB, THING_TYPE_EMA_STATE)
+                    .collect(Collectors.toSet()));
 
     private final Logger logger = LoggerFactory.getLogger(TelenotHandlerFactory.class);
 
@@ -74,6 +76,8 @@ public class TelenotHandlerFactory extends BaseThingHandlerFactory {
             return bridgeHandler;
         } else if (THING_TYPE_SB.equals(thingTypeUID)) {
             return new SBHandler(thing);
+        } else if (THING_TYPE_MB.equals(thingTypeUID)) {
+            return new MBHandler(thing);
         } else if (THING_TYPE_MP.equals(thingTypeUID)) {
             return new MPHandler(thing);
         } else if (THING_TYPE_EMA_STATE.equals(thingTypeUID)) {

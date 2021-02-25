@@ -19,7 +19,6 @@ import org.openhab.binding.telenot.internal.config.SBConfig;
 import org.openhab.binding.telenot.internal.protocol.SBMessage;
 import org.openhab.binding.telenot.internal.protocol.TelenotMessage;
 import org.openhab.core.library.types.OnOffType;
-import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -105,19 +104,17 @@ public class SBHandler extends TelenotThingHandler {
 
             firstUpdateReceived.set(true);
 
-            updateState(CHANNEL_DISARMED, sbMsg.disarmed == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
-            updateState(CHANNEL_INTERNALLY_ARMED,
-                    sbMsg.internallyArmed == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
-            updateState(CHANNEL_EXTERNALLY_ARMED,
-                    sbMsg.externallyArmed == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
-            updateState(CHANNEL_ALARM, sbMsg.alarm == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
+            updateState(CHANNEL_DISARMED, sbMsg.disarmed == 0 ? OnOffType.ON : OnOffType.OFF);
+            updateState(CHANNEL_INTERNALLY_ARMED, sbMsg.internallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
+            updateState(CHANNEL_EXTERNALLY_ARMED, sbMsg.externallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
+            updateState(CHANNEL_ALARM, sbMsg.alarm == 0 ? OnOffType.ON : OnOffType.OFF);
             updateState(CHANNEL_MALFUNCTION, sbMsg.malfuntion == 0 ? OnOffType.ON : OnOffType.OFF);
             updateState(CHANNEL_READY_TO_ARM_INTERNALLY,
-                    sbMsg.readyToArmInternally == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
+                    sbMsg.readyToArmInternally == 0 ? OnOffType.ON : OnOffType.OFF);
             updateState(CHANNEL_READY_TO_ARM_EXTERNALLY,
-                    sbMsg.readyToArmExternally == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
+                    sbMsg.readyToArmExternally == 0 ? OnOffType.ON : OnOffType.OFF);
             updateState(CHANNEL_STATE_INTERNAL_SIGNAL_HORN,
-                    sbMsg.statusInternalSignalHorn == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
+                    sbMsg.statusInternalSignalHorn == 0 ? OnOffType.ON : OnOffType.OFF);
         }
     }
 }

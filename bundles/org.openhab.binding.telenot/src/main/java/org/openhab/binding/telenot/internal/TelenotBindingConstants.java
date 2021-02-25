@@ -37,17 +37,19 @@ public class TelenotBindingConstants {
     public static final ThingTypeUID THING_TYPE_IPBRIDGE = new ThingTypeUID(BINDING_ID, "ipbridge");
     public static final ThingTypeUID THING_TYPE_SB = new ThingTypeUID(BINDING_ID, "sb");
     public static final ThingTypeUID THING_TYPE_MP = new ThingTypeUID(BINDING_ID, "mp");
+    public static final ThingTypeUID THING_TYPE_MB = new ThingTypeUID(BINDING_ID, "mb");
     public static final ThingTypeUID THING_TYPE_EMA_STATE = new ThingTypeUID(BINDING_ID, "emaState");
 
     public static final Set<ThingTypeUID> DISCOVERABLE_DEVICE_TYPE_UIDS = Collections
-            .unmodifiableSet(Stream.of(THING_TYPE_MP, THING_TYPE_SB).collect(Collectors.toSet()));
+            .unmodifiableSet(Stream.of(THING_TYPE_MP, THING_TYPE_SB, THING_TYPE_MB).collect(Collectors.toSet()));
 
-    // Channel IDs for ZoneHandler
+    // Channel IDs for MP / MB handler
     public static final String PROPERTY_ADDRESS = "address";
     public static final String PROPERTY_CHANNEL = "channel";
     public static final String PROPERTY_ID = "id";
 
     public static final String CHANNEL_CONTACT = "contact";
+    public static final String CHANNEL_CONTACT_MB = "contactMB";
     public static final String CHANNEL_STATE = "state";
 
     // Channel IDs for SBHandler

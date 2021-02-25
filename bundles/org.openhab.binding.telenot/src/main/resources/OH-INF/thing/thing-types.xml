@@ -58,28 +58,28 @@
 		<description>State of Telenot security area</description>
 
 		<channels>
-			<channel id="disarmed" typeId="contact-channel">
+			<channel id="disarmed" typeId="indicator-channel">
 				<label>Disarmed</label>
 			</channel>
-			<channel id="internallyArmed" typeId="contact-channel">
+			<channel id="internallyArmed" typeId="indicator-channel">
 				<label>Internally Armed</label>
 			</channel>
-			<channel id="externallyArmed" typeId="contact-channel">
+			<channel id="externallyArmed" typeId="indicator-channel">
 				<label>Externally Armed</label>
 			</channel>
-			<channel id="alarm" typeId="contact-channel">
+			<channel id="alarm" typeId="indicator-channel">
 				<label>Alarm</label>
 			</channel>
 			<channel id="malfuntion" typeId="indicator-channel">
 				<label>Malfunction</label>
 			</channel>
-			<channel id="readyToArmInternally" typeId="contact-channel">
+			<channel id="readyToArmInternally" typeId="indicator-channel">
 				<label>Ready to arm internally</label>
 			</channel>
-			<channel id="readyToArmExternally" typeId="contact-channel">
+			<channel id="readyToArmExternally" typeId="indicator-channel">
 				<label>Ready to arm Externally</label>
 			</channel>
-			<channel id="statusInternalSignalHorn" typeId="contact-channel">
+			<channel id="statusInternalSignalHorn" typeId="conindicatortact-channel">
 				<label>Status internal signal horn</label>
 			</channel>
 		</channels>
@@ -89,6 +89,28 @@
 		<config-description>
 			<parameter name="address" type="integer" required="true">
 				<label>SB Address</label>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<!-- Telenot MB Thing Type -->
+	<thing-type id="mb">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="ipbridge"/>
+		</supported-bridge-type-refs>
+
+		<label>Telenot MB-Address</label>
+		<description>Telenot MB-Address (Meldebereiche)</description>
+
+		<channels>
+			<channel id="contactMB" typeId="contact-channel"/>
+		</channels>
+
+		<representation-property>id</representation-property>
+
+		<config-description>
+			<parameter name="address" type="integer" required="true">
+				<label>MP Address (i.e. 1)</label>
 			</parameter>
 		</config-description>
 	</thing-type>

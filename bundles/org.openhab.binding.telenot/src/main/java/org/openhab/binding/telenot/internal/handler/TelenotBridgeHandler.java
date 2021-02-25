@@ -34,6 +34,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.telenot.internal.TelenotDiscoveryService;
 import org.openhab.binding.telenot.internal.actions.BridgeActions;
 import org.openhab.binding.telenot.internal.protocol.EMAStateMessage;
+import org.openhab.binding.telenot.internal.protocol.MBMessage;
 import org.openhab.binding.telenot.internal.protocol.MPMessage;
 import org.openhab.binding.telenot.internal.protocol.SBMessage;
 import org.openhab.binding.telenot.internal.protocol.TelenotCommand;
@@ -176,6 +177,8 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
                         case ACK:
                             logger.debug("Received ACK message");
                             sendTelenotCommand(TelenotCommand.confirmACK());
+                            // sendTelenotCommand(TelenotCommand.sendACK()); // if sending this, Telenor returns this:
+                            // 680606680002021100011616
                             break;
                         case CONF_ACK:
                             logger.debug("Received Confirm-ACK message");
@@ -203,12 +206,12 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
                             logger.debug("Received {} message", msgType);
                             parseEmaStateMessage(msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
-                            sendTelenotCommand(TelenotCommand.sendACK());
+                            // sendTelenotCommand(TelenotCommand.sendACK());
                             break;
                         case INVALID:
                             logger.warn("INVALID MsgType: {} hexString: {}", msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
-                            sendTelenotCommand(TelenotCommand.sendACK());
+                            // sendTelenotCommand(TelenotCommand.sendACK());
                             break;
                         default:
                             break;
@@ -314,6 +317,33 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
             strBuilder.setLength(0);
             addr++;
         }
+
+        MBMessage mbMsg;
+        String msgMb = msg.substring(52, 84);
+
+        String msgReverseBinaryArrayMb[] = hexStringToReverseBinaryArray(msgMb);
+        int addrMb = 1;
+        for (int i = 0; i < msgReverseBinaryArrayMb.length; i++) {
+            String d = msgReverseBinaryArrayMb[i];
+            for (int a = 1; a <= 8; a++) {
+                strBuilder.append(addrMb);
+                strBuilder.append(",");
+                strBuilder.append(d.substring(a - 1, a));
+                try {
+                    mbMsg = new MBMessage(strBuilder.toString());
+                } catch (IllegalArgumentException e) {
+                    throw new MessageParseException(e.getMessage());
+                }
+
+                notifyChildHandlers(mbMsg);
+                // TelenotDiscoveryService ds = discoveryService;
+                // if (discovery && ds != null) {
+                // ds.processMP(mpMsg.address);
+                // }
+                strBuilder.setLength(0);
+                addrMb++;
+            }
+        }
     }
 
     /**
@@ -349,6 +379,7 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
             TelenotThingHandler handler = (TelenotThingHandler) thing.getHandler();
             //@formatter:off
             if (handler != null && ((handler instanceof SBHandler && msg instanceof SBMessage) ||
+                                    (handler instanceof MBHandler && msg instanceof MBMessage) ||
                                     (handler instanceof MPHandler && msg instanceof MPMessage) ||
                                     (handler instanceof EMAStateHandler && msg instanceof EMAStateMessage))) {
                 handler.handleUpdate(msg);
