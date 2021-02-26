@@ -22,7 +22,7 @@ _Discovery is currently not available._
 
 ### ipbridge
 
-The `ipbridge` thing supports a TCP/IP connection to an Alarm Decoder device such as *AD2PI* or *AD2PHAT*.
+The `ipbridge` thing supports a TCP/IP connection to an RS323 to LAN adapter.
 
 * `hostname` (required) The hostname or IP address of the serial to LAN adapter
 * `tcpPort` (default = 4116) TCP port number for the serial to LAN adapter connection
