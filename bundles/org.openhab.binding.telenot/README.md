@@ -5,6 +5,7 @@ _The Telenot binding connects the Telenot Complex 400 to openhab._
 _It is able to read the states of the contacts and the security areas._
 
 ## Supported Things
+
 The binding supports the following thing types:
 
 * `ipbridge` - Supports TCP connection to the serial tcp adapter.
@@ -19,9 +20,46 @@ _Discovery is currently not available._
 
 ## Thing Configuration
 
-_Describe what is needed to manually configure a thing, either through the (Paper) UI or via a thing-file. This should be mainly about its mandatory and optional configuration parameters. A short example entry for a thing file can help!_
+### ipbridge
 
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
+The `ipbridge` thing supports a TCP/IP connection to an Alarm Decoder device such as *AD2PI* or *AD2PHAT*.
+
+* `hostname` (required) The hostname or IP address of the serial to LAN adapter
+* `tcpPort` (default = 4116) TCP port number for the serial to LAN adapter connection
+* `reconnect` (1-60, default = 2) The period in minutes that the handler will wait between connection checks and connection attempts
+* `timeout` (0-60, default = 5) The period in minutes after which the connection will be reset if no valid messages have been received. Set to 0 to disable.
+
+Thing config file example:
+
+```
+Bridge telenot:ipbridge:device [ hostname="xxx.xxx.xxx.xxx", tcpPort=4116 ] {
+  Thing ...
+  Thing ...
+}
+```
+
+### mb
+
+The `mb` thing provides the state of each single reporting area (Meldebereich).
+
+* `address` (required) The number of reporting area.
+
+### mp
+
+The `mp` thing provides the state of each single reporting point (Meldepunkt).
+
+* `address` (required) The number of reporting ponit.
+
+### sb
+
+The `sb` thing provides the state of each single security area (Sicherungsbereich).
+
+* `address` (required) The number of security area.
+
+
+### emaState
+
+The `emaState` thing currently provides the state of the system.
 
 ## Channels
 
