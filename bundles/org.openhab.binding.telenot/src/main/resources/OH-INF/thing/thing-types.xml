@@ -4,7 +4,7 @@
 	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
 	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
 
-	<!-- Alarm Decoder Bridge -->
+	<!-- Telenot Bridge -->
 	<bridge-type id="ipbridge">
 		<label>Telenot Serial IP Bridge</label>
 		<description>Telenot Complex 400 IP Bridge</description>
@@ -79,7 +79,7 @@
 			<channel id="readyToArmExternally" typeId="indicator-channel">
 				<label>Ready to arm Externally</label>
 			</channel>
-			<channel id="statusInternalSignalHorn" typeId="conindicatortact-channel">
+			<channel id="statusInternalSignalHorn" typeId="indicator-channel">
 				<label>Status internal signal horn</label>
 			</channel>
 		</channels>
@@ -99,8 +99,8 @@
 			<bridge-type-ref id="ipbridge"/>
 		</supported-bridge-type-refs>
 
-		<label>Telenot MB-Address</label>
-		<description>Telenot MB-Address (Meldebereiche)</description>
+		<label>Telenot MB-Number</label>
+		<description>The number of Telenot reporting area (Meldebereiche)</description>
 
 		<channels>
 			<channel id="contactMB" typeId="contact-channel"/>
@@ -110,7 +110,7 @@
 
 		<config-description>
 			<parameter name="address" type="integer" required="true">
-				<label>MP Address (i.e. 1)</label>
+				<label> Reporting area number (i.e. 1)</label>
 			</parameter>
 		</config-description>
 	</thing-type>
@@ -121,8 +121,8 @@
 			<bridge-type-ref id="ipbridge"/>
 		</supported-bridge-type-refs>
 
-		<label>Telenot MP-Address</label>
-		<description>Telenot MP-Address (contacts)</description>
+		<label>Telenot reporting point address</label>
+		<description>The address of Telenot reporting ponit (contacts)</description>
 
 		<channels>
 			<channel id="contact" typeId="contact-channel"/>
@@ -132,7 +132,7 @@
 
 		<config-description>
 			<parameter name="address" type="integer" required="true">
-				<label>MP Address (i.e. 000-001 -> 1)</label>
+				<label>reporting ponit address (i.e. 000-001 -> 1)</label>
 			</parameter>
 		</config-description>
 	</thing-type>

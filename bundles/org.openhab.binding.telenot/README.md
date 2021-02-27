@@ -63,13 +63,61 @@ The `emaState` thing currently provides the state of the system.
 
 ## Channels
 
-_Here you should provide information about available channel types, what their meaning is and how they can be used._
+The Telenot things expose the following channels:
 
-_Note that it is planned to generate some part of this based on the XML files within ```src/main/resources/OH-INF/thing``` of your binding._
+### mb
 
-| channel  | type   | description                  |
-|----------|--------|------------------------------|
-| control  | Switch | This is the control channel  |
+| channel   | type    | RO/RW | description                   |
+|-----------|---------|-------|-------------------------------|
+| contactMB | Contact |   RO  | Reporting area contact state  |
+
+### mp
+
+| channel   | type    | RO/RW | description                   |
+|-----------|---------|-------|-------------------------------|
+| contact   | Contact |  RO   | Reporting point contact state |
+
+### sb
+
+| channel                  | type   | RO/RW | description                              |
+|--------------------------|--------|-------|------------------------------------------|
+| disarmed                 | Switch |  RO   | Security area is disarmend               |
+| internallyArmed          | Switch |  RO   | Security area is internally armend       |
+| externallyArmed          | Switch |  RO   | Security area is externally armend       |
+| alarm                    | Switch |  RO   | Security area alarm                      |
+| malfuntion               | Switch |  RO   | Security area malfunction                |
+| readyToArmInternally     | Switch |  RO   | Security area is ready to arm internally |
+| readyToArmExternally     | Switch |  RO   | Security area is ready to arm externally |
+| statusInternalSignalHorn | Switch |  RO   | Security area state of internally horn   |
+
+### emaState
+
+| channel                    | type     | RO/RW | description                                                |
+|----------------------------|----------|-------|------------------------------------------------------------|
+| disarmedDatetime           | Datetime |  RO   | Date and time the system was disarmed                      |
+| disarmedContact            | String   |  RO   | Name of the contact wich dis armed the system              |
+| intArmedDatetime           | Datetime |  RO   | Date and time the system was internally armed              |
+| intArmedContact            | String   |  RO   | Name of the contact wich armed intenally the system        |
+| extArmedDatetime           | Datetime |  RO   | Date and time the system was externally armed              |
+| extArmedContact            | String   |  RO   | Name of the contact wich armed extenally the system        |
+| intrusionDatetime          | Datetime |  RO   | Date and time intrusion was detected                       |
+| intrusionContact           | String   |  RO   | Name of the contact where intrusion was detected           |
+| intrusionSetClear          | Switch   |  RO   | State intrusion was set / clear                            |
+| batteryMalfunctionDatetime | Datetime |  RO   | Date and time battery malfunction was detected             |
+| batteryMalfunctionContact  | String   |  RO   | Name of the contact where battery malfunction was detected |
+| batteryMalfunctionSetClear | Switch   |  RO   | State battery malfunction was set / clear                  |
+| powerOutageDatetime        | Datetime |  RO   | Date and time power outage was detected                    |
+| powerOutageContact         | String   |  RO   | Name of the contact where power outage was detected        |
+| powerOutageSetClear        | Switch   |  RO   | State power outage was set / clear                         |
+| flasherMalfunctionDatetime | Datetime |  RO   | Date and time flasher malfunction was detected             |
+| flasherMalfunctionContact  | String   |  RO   | Name of the contact where flasher malfunction was detected |
+| flasherMalfunctionClear    | Switch   |  RO   | State flasher malfunction was set / clear                  |
+| horn1MalfunctionDatetime   | Datetime |  RO   | Date and time horn 1 malfunction was detected              |
+| horn1MalfunctionContact    | String   |  RO   | Name of the contact where horn 1 malfunction was detected  |
+| horn1MalfunctionClear      | Switch   |  RO   | State horn 1 malfunction was set / clear                   |
+| horn2MalfunctionDatetime   | Datetime |  RO   | Date and time horn 2 malfunction was detected              |
+| horn2MalfunctionContact    | String   |  RO   | Name of the contact where horn 2 malfunction was detected  |
+| horn2MalfunctionClear      | Switch   |  RO   | State horn 2 malfunction was set / clear                   |
 
 ## Full Example
 
