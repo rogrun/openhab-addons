@@ -203,6 +203,7 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
                         case OPTICAL_FLASHER_MALFUNCTION:
                         case HORN_1_MALFUNCTION:
                         case HORN_2_MALFUNCTION:
+                        case ALARM:
                             logger.debug("Received {} message", msgType);
                             parseEmaStateMessage(msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());

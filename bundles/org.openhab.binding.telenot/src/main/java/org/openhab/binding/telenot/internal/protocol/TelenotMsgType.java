@@ -32,6 +32,7 @@ public enum TelenotMsgType {
     SYS_EXT_ARMED, // system sytem externally armed
     SYS_INT_ARMED, // system sytem internally armed
     SYS_DISARMED, // system sytem disarmed
+    ALARM,
     INTRUSION, //
     BATTERY_MALFUNCTION, //
     POWER_OUTAGE, //
@@ -60,7 +61,8 @@ public enum TelenotMsgType {
 
         // Alarm signal / alarm signal reset ;"682c2c68730205020 0122"
         // Alarm signal / alarm signal reset ;"682c2c68730205020 01a2"
-        // startToMsgType.put("682c2c68730205020", TelenotMsgType.ALARM);
+        // REGEX ^682c2c6873020502\w\w\w\w\w\w01(22|a2)(.*)$
+        // startToMsgType.put("682c2c687302050201000301", TelenotMsgType.ALARM);
 
         // info message "sytem externally armed" ;"682c2c68730205020005320161"
         startToMsgType.put("682c2c687302050200053201", TelenotMsgType.SYS_EXT_ARMED);
@@ -126,6 +128,13 @@ public enum TelenotMsgType {
 
         if (mt == null) {
             mt = startToMsgType.get(s.substring(0, 16));
+        }
+
+        if (mt == null) {
+            String regEX = "^682c2c6873020502\\w\\w\\w\\w\\w\\w01(22|a2)(.*)$";
+            if (s.matches(regEX)) {
+                mt = TelenotMsgType.ALARM;
+            }
         }
 
         if (mt == null) {

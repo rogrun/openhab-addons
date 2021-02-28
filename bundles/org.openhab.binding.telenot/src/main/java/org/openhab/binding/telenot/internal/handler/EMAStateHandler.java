@@ -74,6 +74,7 @@ public class EMAStateHandler extends TelenotThingHandler {
         updateState(CHANNEL_INT_ARMED_DATETIME, state);
         updateState(CHANNEL_EXT_ARMED_DATETIME, state);
         updateState(CHANNEL_DISARMED_DATETIME, state);
+        updateState(CHANNEL_ALARM_DATETIME, state);
         updateState(CHANNEL_INTRUSION_DATETIME, state);
         updateState(CHANNEL_BATTERY_MALFUNCTION_DATETIME, state);
         updateState(CHANNEL_POWER_OUTAGE_DATETIME, state);
@@ -84,6 +85,7 @@ public class EMAStateHandler extends TelenotThingHandler {
         updateState(CHANNEL_INT_ARMED_CONTACT, state);
         updateState(CHANNEL_EXT_ARMED_CONTACT, state);
         updateState(CHANNEL_DISARMED_CONTACT, state);
+        updateState(CHANNEL_ALARM_CONTACT, state);
         updateState(CHANNEL_INTRUSION_CONTACT, state);
         updateState(CHANNEL_BATTERY_MALFUNCTION_CONTACT, state);
         updateState(CHANNEL_POWER_OUTAGE_CONTACT, state);
@@ -91,6 +93,7 @@ public class EMAStateHandler extends TelenotThingHandler {
         updateState(CHANNEL_HORN_1_MALFUNCTION_CONTACT, state);
         updateState(CHANNEL_HORN_2_MALFUNCTION_CONTACT, state);
 
+        updateState(CHANNEL_ALARM_SET_CLEAR, state);
         updateState(CHANNEL_INTRUSION_SET_CLEAR, state);
         updateState(CHANNEL_BATTERY_MALFUNCTION_SET_CLEAR, state);
         updateState(CHANNEL_POWER_OUTAGE_SET_CLEAR, state);
@@ -129,6 +132,11 @@ public class EMAStateHandler extends TelenotThingHandler {
             case "SYS_DISARMED":
                 updateState(CHANNEL_DISARMED_DATETIME, emaMsg.date);
                 updateState(CHANNEL_DISARMED_CONTACT, new StringType(emaMsg.contact));
+                break;
+            case "ALARM":
+                updateState(CHANNEL_ALARM_DATETIME, emaMsg.date);
+                updateState(CHANNEL_ALARM_CONTACT, new StringType(emaMsg.contact));
+                updateState(CHANNEL_ALARM_SET_CLEAR, emaMsg.alarmSetClear ? OnOffType.ON : OnOffType.OFF);
                 break;
             case "INTRUSION":
                 updateState(CHANNEL_INTRUSION_DATETIME, emaMsg.date);

@@ -66,6 +66,7 @@ public class TelenotBindingConstants {
     public static final String CHANNEL_INT_ARMED_DATETIME = "intArmedDatetime";
     public static final String CHANNEL_EXT_ARMED_DATETIME = "extArmedDatetime";
     public static final String CHANNEL_DISARMED_DATETIME = "disarmedDatetime";
+    public static final String CHANNEL_ALARM_DATETIME = "alarmDatetime";
     public static final String CHANNEL_INTRUSION_DATETIME = "intrusionDatetime";
     public static final String CHANNEL_BATTERY_MALFUNCTION_DATETIME = "batteryMalfunctionDatetime";
     public static final String CHANNEL_POWER_OUTAGE_DATETIME = "powerOutageDatetime";
@@ -76,6 +77,7 @@ public class TelenotBindingConstants {
     public static final String CHANNEL_INT_ARMED_CONTACT = "intArmedContact";
     public static final String CHANNEL_EXT_ARMED_CONTACT = "extArmedContact";
     public static final String CHANNEL_DISARMED_CONTACT = "disarmedContact";
+    public static final String CHANNEL_ALARM_CONTACT = "alarmContact";
     public static final String CHANNEL_INTRUSION_CONTACT = "intrusionContact";
     public static final String CHANNEL_BATTERY_MALFUNCTION_CONTACT = "batteryMalfunctionContact";
     public static final String CHANNEL_POWER_OUTAGE_CONTACT = "powerOutageContact";
@@ -83,6 +85,7 @@ public class TelenotBindingConstants {
     public static final String CHANNEL_HORN_1_MALFUNCTION_CONTACT = "horn1MalfunctionContact";
     public static final String CHANNEL_HORN_2_MALFUNCTION_CONTACT = "horn2MalfunctionContact";
 
+    public static final String CHANNEL_ALARM_SET_CLEAR = "alarmSetClear";
     public static final String CHANNEL_INTRUSION_SET_CLEAR = "intrusionSetClear";
     public static final String CHANNEL_BATTERY_MALFUNCTION_SET_CLEAR = "batteryMalfunctionSetClear";
     public static final String CHANNEL_POWER_OUTAGE_SET_CLEAR = "powerOutageSetClear";

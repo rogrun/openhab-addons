@@ -96,7 +96,8 @@ public class EMAStateMessage extends TelenotMessage {
         String strcontact = strBuilder.toString();
 
         boolean bool = false;
-        if (msg.substring(24, 26) == "30" || msg.substring(24, 26) == "32" || msg.substring(24, 26) == "33") {
+        if (msg.substring(24, 26) == "22" || msg.substring(24, 26) == "30" || msg.substring(24, 26) == "32"
+                || msg.substring(24, 26) == "33") {
             bool = true;
         }
 

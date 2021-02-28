@@ -100,6 +100,9 @@ The Telenot things expose the following channels:
 | intArmedContact            | String   |  RO   | Name of the contact wich armed intenally the system        |
 | extArmedDatetime           | Datetime |  RO   | Date and time the system was externally armed              |
 | extArmedContact            | String   |  RO   | Name of the contact wich armed extenally the system        |
+| alarmDatetime              | Datetime |  RO   | Date and time alarm was detected                           |
+| alarmContact               | String   |  RO   | Name of the contact where alarm was detected               |
+| alarmSetClear              | Switch   |  RO   | State alarm was set / clear                                |
 | intrusionDatetime          | Datetime |  RO   | Date and time intrusion was detected                       |
 | intrusionContact           | String   |  RO   | Name of the contact where intrusion was detected           |
 | intrusionSetClear          | Switch   |  RO   | State intrusion was set / clear                            |

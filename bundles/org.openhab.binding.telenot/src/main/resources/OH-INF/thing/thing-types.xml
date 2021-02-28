@@ -166,6 +166,15 @@
 			<channel id="disarmedContact" typeId="text-channel">
 				<label>Disarmed Contact</label>
 			</channel>
+			<channel id="alarmDatetime" typeId="datetime-channel">
+				<label>Alarm Date/Time</label>
+			</channel>
+			<channel id="alarmContact" typeId="text-channel">
+				<label>Alarm Contact</label>
+			</channel>
+			<channel id="alarmSetClear" typeId="indicator-channel">
+				<label>Alarm Set/Clear</label>
+			</channel>
 			<channel id="intrusionDatetime" typeId="datetime-channel">
 				<label>Intrusion Date/Time</label>
 			</channel>
