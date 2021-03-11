@@ -32,7 +32,7 @@ public class SBMessage extends TelenotMessage {
     public final int internallyArmed;
     public final int externallyArmed;
     public final int alarm;
-    public final int malfuntion;
+    public final int malfunction;
     public final int readyToArmInternally;
     public final int readyToArmExternally;
     public final int statusInternalSignalHorn;
@@ -52,7 +52,7 @@ public class SBMessage extends TelenotMessage {
             internallyArmed = Integer.parseInt(parts.get(2));
             externallyArmed = Integer.parseInt(parts.get(3));
             alarm = Integer.parseInt(parts.get(4));
-            malfuntion = Integer.parseInt(parts.get(5));
+            malfunction = Integer.parseInt(parts.get(5));
             readyToArmInternally = Integer.parseInt(parts.get(6));
             readyToArmExternally = Integer.parseInt(parts.get(7));
             statusInternalSignalHorn = Integer.parseInt(parts.get(8));

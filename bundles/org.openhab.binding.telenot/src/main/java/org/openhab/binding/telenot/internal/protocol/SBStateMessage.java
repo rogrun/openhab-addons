@@ -16,13 +16,13 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.core.library.types.DateTimeType;
 
 /**
- * The {@link EMAStateMessage} class represents a parsed SB message.
+ * The {@link SBStateMessage} class represents a parsed SB message.
  * *
  * 
  * @author Ronny Grun - Initial contribution
  */
 @NonNullByDefault
-public class EMAStateMessage extends TelenotMessage {
+public class SBStateMessage extends TelenotMessage {
 
     /** Address number */
     public final int address;
@@ -31,7 +31,7 @@ public class EMAStateMessage extends TelenotMessage {
     public final String contact;
     public final boolean alarmSetClear;
 
-    public EMAStateMessage(String message) throws IllegalArgumentException {
+    public SBStateMessage(String message) throws IllegalArgumentException {
         super(message);
         StringBuilder strBuilder = new StringBuilder();
 
@@ -42,8 +42,23 @@ public class EMAStateMessage extends TelenotMessage {
         }
 
         String msg = parts[1];
+        int ad = 1;
 
-        int ad = Integer.parseInt(msg.substring(16, 18), 16);
+        switch (parts[0]) {
+            case "SYS_EXT_ARMED":
+            case "SYS_INT_ARMED":
+            case "SYS_DISARMED":
+                Integer a = Integer.parseInt(msg.substring(18, 22), 16);
+                double b = a - 1327;
+                // double c = b / 8;
+                double d = Math.ceil(b / 8);
+                ad = (int) d;
+                // ad = (int) (Math.ceil((Integer.parseInt(msg.substring(18, 22), 16) - 1327) / 8));
+                break;
+            case "ALARM":
+                ad = Integer.parseInt(msg.substring(16, 18), 16);
+                break;
+        }
 
         int year = Integer.parseInt(msg.substring(30, 32), 16);
         strBuilder.append("20");
@@ -98,8 +113,8 @@ public class EMAStateMessage extends TelenotMessage {
         String strcontact = strBuilder.toString();
 
         boolean bool = false;
-        if (msg.substring(24, 26) == "22" || msg.substring(24, 26) == "30" || msg.substring(24, 26) == "32"
-                || msg.substring(24, 26) == "33") {
+        // int blint = Integer.parseInt(msg.substring(24, 26), 16);
+        if (Integer.parseInt(msg.substring(24, 26), 16) == 34) {
             bool = true;
         }
 
@@ -114,7 +129,7 @@ public class EMAStateMessage extends TelenotMessage {
             contact = strcontact;
             alarmSetClear = bool;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(" emaState message contains invalid number: " + e.getMessage(), e);
+            throw new IllegalArgumentException(" SBState message contains invalid number: " + e.getMessage(), e);
         }
     }
 }

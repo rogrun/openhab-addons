@@ -17,8 +17,11 @@ import static org.openhab.binding.telenot.internal.TelenotBindingConstants.*;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.telenot.internal.config.SBConfig;
 import org.openhab.binding.telenot.internal.protocol.SBMessage;
+import org.openhab.binding.telenot.internal.protocol.SBStateMessage;
+import org.openhab.binding.telenot.internal.protocol.TelenotCommand;
 import org.openhab.binding.telenot.internal.protocol.TelenotMessage;
 import org.openhab.core.library.types.OnOffType;
+import org.openhab.core.library.types.StringType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -73,6 +76,18 @@ public class SBHandler extends TelenotThingHandler {
     @Override
     public void initChannelState() {
         UnDefType state = UnDefType.UNDEF;
+        updateState(CHANNEL_INT_ARMED_DATETIME, state);
+        updateState(CHANNEL_EXT_ARMED_DATETIME, state);
+        updateState(CHANNEL_DISARMED_DATETIME, state);
+        updateState(CHANNEL_ALARM_DATETIME, state);
+
+        updateState(CHANNEL_INT_ARMED_CONTACT, state);
+        updateState(CHANNEL_EXT_ARMED_CONTACT, state);
+        updateState(CHANNEL_DISARMED_CONTACT, state);
+        updateState(CHANNEL_ALARM_CONTACT, state);
+
+        updateState(CHANNEL_ALARM_SET_CLEAR, state);
+
         updateState(CHANNEL_DISARMED, state);
         updateState(CHANNEL_INTERNALLY_ARMED, state);
         updateState(CHANNEL_EXTERNALLY_ARMED, state);
@@ -87,34 +102,109 @@ public class SBHandler extends TelenotThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        // All channels are read-only, so ignore all commands.
+        if (channelUID.getId().equals(CHANNEL_DISARM)) {
+            if (command instanceof OnOffType) {
+                if (command == OnOffType.OFF) {
+                    // sendCommand(TelenotCommand.disarmArea(config.address));
+                } else if (command == OnOffType.ON) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.disarmArea(config.address));
+                    // setChannelState(OnOffType.ON);
+                }
+            }
+        } else if (channelUID.getId().equals(CHANNEL_INTERNAL_ARM)) {
+            if (command instanceof OnOffType) {
+                if (command == OnOffType.OFF) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.disarmArea(config.address));
+                } else if (command == OnOffType.ON) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.intArmArea(config.address));
+                }
+            }
+        } else if (channelUID.getId().equals(CHANNEL_EXTERNAL_ARM)) {
+            if (command instanceof OnOffType) {
+                if (command == OnOffType.OFF) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.disarmArea(config.address));
+                } else if (command == OnOffType.ON) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.extArmArea(config.address));
+                }
+            }
+        } else if (channelUID.getId().equals(CHANNEL_RESET_ALARM)) {
+            if (command instanceof OnOffType) {
+                if (command == OnOffType.OFF) {
+                    // sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.resetAlarm(config.address, 0));
+                    // sendCommand(TelenotCommand.extArmArea(config.address, 1));
+                    // setChannelState(OnOffType.OFF);
+                } else if (command == OnOffType.ON) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.resetAlarm(config.address));
+                }
+            }
+        }
     }
 
     @Override
     public void handleUpdate(TelenotMessage msg) {
-        if (!(msg instanceof SBMessage)) {
+
+        if (msg instanceof SBMessage) {
+            SBMessage sbMsg = (SBMessage) msg;
+            if (config.address == sbMsg.address) {
+                logger.trace("SB handler for {} received update: {},{},{},{},{},{},{},{}", config.address,
+                        sbMsg.disarmed, sbMsg.internallyArmed, sbMsg.externallyArmed, sbMsg.alarm, sbMsg.malfunction,
+                        sbMsg.readyToArmInternally, sbMsg.readyToArmExternally, sbMsg.statusInternalSignalHorn);
+
+                firstUpdateReceived.set(true);
+
+                updateState(CHANNEL_DISARMED, sbMsg.disarmed == 0 ? OnOffType.ON : OnOffType.OFF);
+                updateState(CHANNEL_DISARM, sbMsg.disarmed == 0 ? OnOffType.ON : OnOffType.OFF);
+
+                updateState(CHANNEL_INTERNALLY_ARMED, sbMsg.internallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
+                updateState(CHANNEL_INTERNAL_ARM, sbMsg.internallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
+
+                updateState(CHANNEL_EXTERNALLY_ARMED, sbMsg.externallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
+                updateState(CHANNEL_EXTERNAL_ARM, sbMsg.externallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
+
+                updateState(CHANNEL_ALARM, sbMsg.alarm == 0 ? OnOffType.ON : OnOffType.OFF);
+                updateState(CHANNEL_MALFUNCTION, sbMsg.malfunction == 0 ? OnOffType.ON : OnOffType.OFF);
+                updateState(CHANNEL_READY_TO_ARM_INTERNALLY,
+                        sbMsg.readyToArmInternally == 0 ? OnOffType.ON : OnOffType.OFF);
+                updateState(CHANNEL_READY_TO_ARM_EXTERNALLY,
+                        sbMsg.readyToArmExternally == 0 ? OnOffType.ON : OnOffType.OFF);
+                updateState(CHANNEL_STATE_INTERNAL_SIGNAL_HORN,
+                        sbMsg.statusInternalSignalHorn == 0 ? OnOffType.ON : OnOffType.OFF);
+            }
+        } else if (msg instanceof SBStateMessage) {
+            SBStateMessage emaMsg = (SBStateMessage) msg;
+            if (config.address == emaMsg.address) {
+                switch (emaMsg.messagetype) {
+                    case "SYS_EXT_ARMED":
+                        updateState(CHANNEL_EXT_ARMED_DATETIME, emaMsg.date);
+                        updateState(CHANNEL_EXT_ARMED_CONTACT, new StringType(emaMsg.contact));
+                        break;
+                    case "SYS_INT_ARMED":
+                        updateState(CHANNEL_INT_ARMED_DATETIME, emaMsg.date);
+                        updateState(CHANNEL_INT_ARMED_CONTACT, new StringType(emaMsg.contact));
+                        break;
+                    case "SYS_DISARMED":
+                        updateState(CHANNEL_DISARMED_DATETIME, emaMsg.date);
+                        updateState(CHANNEL_DISARMED_CONTACT, new StringType(emaMsg.contact));
+                        break;
+                    case "ALARM":
+                        updateState(CHANNEL_ALARM_DATETIME, emaMsg.date);
+                        updateState(CHANNEL_ALARM_CONTACT, new StringType(emaMsg.contact));
+                        updateState(CHANNEL_ALARM_SET_CLEAR, emaMsg.alarmSetClear ? OnOffType.ON : OnOffType.OFF);
+                        if (!emaMsg.alarmSetClear) {
+                            updateState(CHANNEL_RESET_ALARM, OnOffType.OFF);
+                        }
+                        break;
+                }
+            }
+        } else {
             return;
-        }
-        SBMessage sbMsg = (SBMessage) msg;
-
-        if (config.address == sbMsg.address) {
-            logger.trace("SB handler for {} received update: {},{},{},{},{},{},{},{}", config.address, sbMsg.disarmed,
-                    sbMsg.internallyArmed, sbMsg.externallyArmed, sbMsg.alarm, sbMsg.malfuntion,
-                    sbMsg.readyToArmInternally, sbMsg.readyToArmExternally, sbMsg.statusInternalSignalHorn);
-
-            firstUpdateReceived.set(true);
-
-            updateState(CHANNEL_DISARMED, sbMsg.disarmed == 0 ? OnOffType.ON : OnOffType.OFF);
-            updateState(CHANNEL_INTERNALLY_ARMED, sbMsg.internallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
-            updateState(CHANNEL_EXTERNALLY_ARMED, sbMsg.externallyArmed == 0 ? OnOffType.ON : OnOffType.OFF);
-            updateState(CHANNEL_ALARM, sbMsg.alarm == 0 ? OnOffType.ON : OnOffType.OFF);
-            updateState(CHANNEL_MALFUNCTION, sbMsg.malfuntion == 0 ? OnOffType.ON : OnOffType.OFF);
-            updateState(CHANNEL_READY_TO_ARM_INTERNALLY,
-                    sbMsg.readyToArmInternally == 0 ? OnOffType.ON : OnOffType.OFF);
-            updateState(CHANNEL_READY_TO_ARM_EXTERNALLY,
-                    sbMsg.readyToArmExternally == 0 ? OnOffType.ON : OnOffType.OFF);
-            updateState(CHANNEL_STATE_INTERNAL_SIGNAL_HORN,
-                    sbMsg.statusInternalSignalHorn == 0 ? OnOffType.ON : OnOffType.OFF);
         }
     }
 }

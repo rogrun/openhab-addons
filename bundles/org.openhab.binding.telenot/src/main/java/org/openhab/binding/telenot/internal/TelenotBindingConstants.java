@@ -50,14 +50,20 @@ public class TelenotBindingConstants {
 
     public static final String CHANNEL_CONTACT = "contact";
     public static final String CHANNEL_CONTACT_MB = "contactMB";
+    public static final String CHANNEL_DISABLE_MB = "disableMB";
     public static final String CHANNEL_STATE = "state";
 
     // Channel IDs for SBHandler
     public static final String CHANNEL_DISARMED = "disarmed";
     public static final String CHANNEL_INTERNALLY_ARMED = "internallyArmed";
     public static final String CHANNEL_EXTERNALLY_ARMED = "externallyArmed";
+    public static final String CHANNEL_DISARM = "disarm";
+    public static final String CHANNEL_INTERNAL_ARM = "internalArm";
+    public static final String CHANNEL_EXTERNAL_ARM = "externalArm";
+    public static final String CHANNEL_RESET_ALARM = "resetAlarm";
+
     public static final String CHANNEL_ALARM = "alarm";
-    public static final String CHANNEL_MALFUNCTION = "malfuntion";
+    public static final String CHANNEL_MALFUNCTION = "malfunction";
     public static final String CHANNEL_READY_TO_ARM_INTERNALLY = "readyToArmInternally";
     public static final String CHANNEL_READY_TO_ARM_EXTERNALLY = "readyToArmExternally";
     public static final String CHANNEL_STATE_INTERNAL_SIGNAL_HORN = "statusInternalSignalHorn";

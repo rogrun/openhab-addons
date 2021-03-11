@@ -34,9 +34,11 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.telenot.internal.TelenotDiscoveryService;
 import org.openhab.binding.telenot.internal.actions.BridgeActions;
 import org.openhab.binding.telenot.internal.protocol.EMAStateMessage;
+import org.openhab.binding.telenot.internal.protocol.MBDMessage;
 import org.openhab.binding.telenot.internal.protocol.MBMessage;
 import org.openhab.binding.telenot.internal.protocol.MPMessage;
 import org.openhab.binding.telenot.internal.protocol.SBMessage;
+import org.openhab.binding.telenot.internal.protocol.SBStateMessage;
 import org.openhab.binding.telenot.internal.protocol.TelenotCommand;
 import org.openhab.binding.telenot.internal.protocol.TelenotMessage;
 import org.openhab.binding.telenot.internal.protocol.TelenotMsgType;
@@ -174,15 +176,16 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
 
                 try {
                     switch (msgType) {
-                        case ACK:
-                            logger.debug("Received ACK message");
+                        case SEND_NORM:
+                            logger.debug("Received SEND_NORM message");
                             sendTelenotCommand(TelenotCommand.confirmACK());
                             // sendTelenotCommand(TelenotCommand.sendACK()); // if sending this, Telenor returns this:
                             // 680606680002021100011616
                             break;
                         case CONF_ACK:
                             logger.debug("Received Confirm-ACK message");
-                            sendTelenotCommand(TelenotCommand.confirmACK());
+                            // sendTelenotCommand(TelenotCommand.confirmACK());
+                            // Send Command to C400
                             break;
                         case MP:
                             logger.debug("Received MP message");
@@ -197,13 +200,17 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
                         case SYS_INT_ARMED:
                         case SYS_EXT_ARMED:
                         case SYS_DISARMED:
+                        case ALARM:
+                            logger.debug("Received SB state message: {}", msgType);
+                            parseSbStateMessage(msgType, message);
+                            sendTelenotCommand(TelenotCommand.confirmACK());
+                            break;
                         case INTRUSION:
                         case BATTERY_MALFUNCTION:
                         case POWER_OUTAGE:
                         case OPTICAL_FLASHER_MALFUNCTION:
                         case HORN_1_MALFUNCTION:
                         case HORN_2_MALFUNCTION:
-                        case ALARM:
                             logger.debug("Received {} message", msgType);
                             parseEmaStateMessage(msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
@@ -345,6 +352,57 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
                 addrMb++;
             }
         }
+
+        MBDMessage mbdMsg;
+        String msgMbd = msg.substring(84, 116);
+
+        String msgReverseBinaryArrayMbd[] = hexStringToReverseBinaryArray(msgMbd);
+        int addrMbd = 1;
+        for (int i = 0; i < msgReverseBinaryArrayMbd.length; i++) {
+            String d = msgReverseBinaryArrayMbd[i];
+            for (int a = 1; a <= 8; a++) {
+                strBuilder.append(addrMbd);
+                strBuilder.append(",");
+                strBuilder.append(d.substring(a - 1, a));
+                try {
+                    mbdMsg = new MBDMessage(strBuilder.toString());
+                } catch (IllegalArgumentException e) {
+                    throw new MessageParseException(e.getMessage());
+                }
+
+                notifyChildHandlers(mbdMsg);
+
+                // TelenotDiscoveryService ds = discoveryService;
+                // if (discovery && ds != null) {
+                // ds.processMP(mpMsg.address);
+                // }
+                strBuilder.setLength(0);
+                addrMbd++;
+            }
+        }
+    }
+
+    /**
+     * Parse and handle SB State messages. The SB messages have
+     * identical format.
+     *
+     * @param mt message type of incoming message
+     * @param msg string containing incoming message payload
+     * @throws MessageParseException
+     */
+    private void parseSbStateMessage(TelenotMsgType mt, String msg) throws MessageParseException {
+        SBStateMessage sbStateMessage;
+        StringBuilder sb = new StringBuilder();
+        sb.append(mt);
+        sb.append(":");
+        sb.append(msg);
+
+        try {
+            sbStateMessage = new SBStateMessage(sb.toString());
+        } catch (IllegalArgumentException e) {
+            throw new MessageParseException(e.getMessage());
+        }
+        notifyChildHandlers(sbStateMessage);
     }
 
     /**
@@ -380,7 +438,9 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
             TelenotThingHandler handler = (TelenotThingHandler) thing.getHandler();
             //@formatter:off
             if (handler != null && ((handler instanceof SBHandler && msg instanceof SBMessage) ||
+                                    (handler instanceof SBHandler && msg instanceof SBStateMessage) ||
                                     (handler instanceof MBHandler && msg instanceof MBMessage) ||
+                                    (handler instanceof MBHandler && msg instanceof MBDMessage) ||
                                     (handler instanceof MPHandler && msg instanceof MPMessage) ||
                                     (handler instanceof EMAStateHandler && msg instanceof EMAStateMessage))) {
                 handler.handleUpdate(msg);

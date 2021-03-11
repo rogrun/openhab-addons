@@ -58,96 +58,6 @@
 		<description>State of Telenot security area</description>
 
 		<channels>
-			<channel id="disarmed" typeId="indicator-channel">
-				<label>Disarmed</label>
-			</channel>
-			<channel id="internallyArmed" typeId="indicator-channel">
-				<label>Internally Armed</label>
-			</channel>
-			<channel id="externallyArmed" typeId="indicator-channel">
-				<label>Externally Armed</label>
-			</channel>
-			<channel id="alarm" typeId="indicator-channel">
-				<label>Alarm</label>
-			</channel>
-			<channel id="malfuntion" typeId="indicator-channel">
-				<label>Malfunction</label>
-			</channel>
-			<channel id="readyToArmInternally" typeId="indicator-channel">
-				<label>Ready to arm internally</label>
-			</channel>
-			<channel id="readyToArmExternally" typeId="indicator-channel">
-				<label>Ready to arm Externally</label>
-			</channel>
-			<channel id="statusInternalSignalHorn" typeId="indicator-channel">
-				<label>Status internal signal horn</label>
-			</channel>
-		</channels>
-
-		<representation-property>id</representation-property>
-
-		<config-description>
-			<parameter name="address" type="integer" required="true">
-				<label>SB Address</label>
-			</parameter>
-		</config-description>
-	</thing-type>
-
-	<!-- Telenot MB Thing Type -->
-	<thing-type id="mb">
-		<supported-bridge-type-refs>
-			<bridge-type-ref id="ipbridge"/>
-		</supported-bridge-type-refs>
-
-		<label>Telenot MB-Number</label>
-		<description>The number of Telenot reporting area (Meldebereiche)</description>
-
-		<channels>
-			<channel id="contactMB" typeId="contact-channel"/>
-		</channels>
-
-		<representation-property>id</representation-property>
-
-		<config-description>
-			<parameter name="address" type="integer" required="true">
-				<label> Reporting area number (i.e. 1)</label>
-			</parameter>
-		</config-description>
-	</thing-type>
-
-	<!-- Telenot MP Thing Type -->
-	<thing-type id="mp">
-		<supported-bridge-type-refs>
-			<bridge-type-ref id="ipbridge"/>
-		</supported-bridge-type-refs>
-
-		<label>Telenot reporting point address</label>
-		<description>The address of Telenot reporting ponit (contacts)</description>
-
-		<channels>
-			<channel id="contact" typeId="contact-channel"/>
-		</channels>
-
-		<representation-property>id</representation-property>
-
-		<config-description>
-			<parameter name="address" type="integer" required="true">
-				<label>reporting ponit address (i.e. 000-001 -> 1)</label>
-			</parameter>
-		</config-description>
-	</thing-type>
-
-
-	<!-- Telenot Int Armed Thing Type -->
-	<thing-type id="emaState">
-		<supported-bridge-type-refs>
-			<bridge-type-ref id="ipbridge"/>
-		</supported-bridge-type-refs>
-
-		<label>Telenot EMA State</label>
-		<description>Telenot EMA State</description>
-
-		<channels>
 			<channel id="intArmedDatetime" typeId="datetime-channel">
 				<label>Internally Armed Date/Time</label>
 			</channel>
@@ -175,6 +85,142 @@
 			<channel id="alarmSetClear" typeId="indicator-channel">
 				<label>Alarm Set/Clear</label>
 			</channel>
+			<channel id="disarmed" typeId="indicator-channel">
+				<label>Disarmed</label>
+			</channel>
+			<channel id="internallyArmed" typeId="indicator-channel">
+				<label>Internally Armed</label>
+			</channel>
+			<channel id="externallyArmed" typeId="indicator-channel">
+				<label>Externally Armed</label>
+			</channel>
+			<channel id="alarm" typeId="indicator-channel">
+				<label>Alarm</label>
+			</channel>
+			<channel id="malfunction" typeId="indicator-channel">
+				<label>Malfunction</label>
+			</channel>
+			<channel id="readyToArmInternally" typeId="indicator-channel">
+				<label>Ready to arm internally</label>
+			</channel>
+			<channel id="readyToArmExternally" typeId="indicator-channel">
+				<label>Ready to arm Externally</label>
+			</channel>
+			<channel id="statusInternalSignalHorn" typeId="indicator-channel">
+				<label>Status internal signal horn</label>
+			</channel>
+			<channel id="externalArm" typeId="switch-channel">
+				<label>Arm external</label>
+			</channel>
+			<channel id="internalArm" typeId="switch-channel">
+				<label>Arm internal</label>
+			</channel>
+			<channel id="disarm" typeId="switch-channel">
+				<label>Disarm</label>
+			</channel>
+			<channel id="resetAlarm" typeId="switch-channel">
+				<label>Reset alarm</label>
+			</channel>
+		</channels>
+
+		<representation-property>id</representation-property>
+
+		<config-description>
+			<parameter name="address" type="integer" required="true">
+				<label>Number (i.e. 1 for the first security area)</label>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<!-- Telenot MB Thing Type -->
+	<thing-type id="mb">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="ipbridge"/>
+		</supported-bridge-type-refs>
+
+		<label>Telenot MB-Number</label>
+		<description>The number of Telenot reporting area (Meldebereiche)</description>
+
+		<channels>
+			<channel id="contactMB" typeId="contact-channel">
+				<label>Contact</label>
+			</channel>
+			<channel id="disableMB" typeId="switch-channel">
+				<label>Disable Contact</label>
+			</channel>
+		</channels>
+
+		<representation-property>id</representation-property>
+
+		<config-description>
+			<parameter name="address" type="integer" required="true">
+				<label> Reporting area number (i.e. 1)</label>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<!-- Telenot MP Thing Type -->
+	<thing-type id="mp">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="ipbridge"/>
+		</supported-bridge-type-refs>
+
+		<label>Telenot reporting point address</label>
+		<description>The address of Telenot reporting point (contacts)</description>
+
+		<channels>
+			<channel id="contact" typeId="contact-channel"/>
+		</channels>
+
+		<representation-property>id</representation-property>
+
+		<config-description>
+			<parameter name="address" type="integer" required="true">
+				<label>reporting point address (i.e. 000-001 -> 1)</label>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+
+	<!-- Telenot system state Thing Type -->
+	<thing-type id="emaState">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="ipbridge"/>
+		</supported-bridge-type-refs>
+
+		<label>Telenot EMA State</label>
+		<description>Telenot EMA State</description>
+
+		<channels>
+			<!--
+				<channel id="intArmedDatetime" typeId="datetime-channel">
+				<label>Internally Armed Date/Time</label>
+				</channel>
+				<channel id="intArmedContact" typeId="text-channel">
+				<label>Internally Armed Contact</label>
+				</channel>
+				<channel id="extArmedDatetime" typeId="datetime-channel">
+				<label>Externally Armed Date/Time</label>
+				</channel>
+				<channel id="extArmedContact" typeId="text-channel">
+				<label>Externally Armed Contact</label>
+				</channel>
+				<channel id="disarmedDatetime" typeId="datetime-channel">
+				<label>Disarmed Date/Time</label>
+				</channel>
+				<channel id="disarmedContact" typeId="text-channel">
+				<label>Disarmed Contact</label>
+				</channel>
+				<channel id="alarmDatetime" typeId="datetime-channel">
+				<label>Alarm Date/Time</label>
+				</channel>
+				<channel id="alarmContact" typeId="text-channel">
+				<label>Alarm Contact</label>
+				</channel>
+				<channel id="alarmSetClear" typeId="indicator-channel">
+				<label>Alarm Set/Clear</label>
+				</channel>
+			-->
 			<channel id="intrusionDatetime" typeId="datetime-channel">
 				<label>Intrusion Date/Time</label>
 			</channel>

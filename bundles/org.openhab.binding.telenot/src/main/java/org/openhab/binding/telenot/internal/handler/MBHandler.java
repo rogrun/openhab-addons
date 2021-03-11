@@ -16,8 +16,11 @@ import static org.openhab.binding.telenot.internal.TelenotBindingConstants.*;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.openhab.binding.telenot.internal.config.MBConfig;
+import org.openhab.binding.telenot.internal.protocol.MBDMessage;
 import org.openhab.binding.telenot.internal.protocol.MBMessage;
+import org.openhab.binding.telenot.internal.protocol.TelenotCommand;
 import org.openhab.binding.telenot.internal.protocol.TelenotMessage;
+import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.OpenClosedType;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -75,27 +78,49 @@ public class MBHandler extends TelenotThingHandler {
     public void initChannelState() {
         UnDefType state = UnDefType.UNDEF;
         updateState(CHANNEL_CONTACT_MB, state);
+        updateState(CHANNEL_DISABLE_MB, state);
         firstUpdateReceived.set(false);
     }
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
-        // All channels are read-only, so ignore all commands.
+        if (channelUID.getId().equals(CHANNEL_DISABLE_MB)) {
+            if (command instanceof OnOffType) {
+                if (command == OnOffType.OFF) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.disableReportingPoint(config.address, 0));
+                } else if (command == OnOffType.ON) {
+                    sendCommand(TelenotCommand.sendNorm());
+                    sendCommand(TelenotCommand.disableReportingPoint(config.address, 1));
+                }
+            }
+        }
     }
 
     @Override
     public void handleUpdate(TelenotMessage msg) {
-        if (!(msg instanceof MBMessage)) {
+        if (msg instanceof MBMessage) {
+
+            MBMessage mbMsg = (MBMessage) msg;
+
+            if (config.address == mbMsg.address) {
+                logger.trace("MB handler for {} received update: {}", config.address, mbMsg.data);
+
+                firstUpdateReceived.set(true);
+                OpenClosedType state = (mbMsg.data == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
+                updateState(CHANNEL_CONTACT_MB, state);
+            }
+        } else if (msg instanceof MBDMessage) {
+            MBDMessage mbdMsg = (MBDMessage) msg;
+
+            if (config.address == mbdMsg.address) {
+                logger.trace("MBD handler for {} received update: {}", config.address, mbdMsg.data);
+
+                firstUpdateReceived.set(true);
+                updateState(CHANNEL_DISABLE_MB, mbdMsg.data == 0 ? OnOffType.ON : OnOffType.OFF);
+            }
+        } else {
             return;
-        }
-        MBMessage mbMsg = (MBMessage) msg;
-
-        if (config.address == mbMsg.address) {
-            logger.trace("MB handler for {} received update: {}", config.address, mbMsg.data);
-
-            firstUpdateReceived.set(true);
-            OpenClosedType state = (mbMsg.data == 0 ? OpenClosedType.OPEN : OpenClosedType.CLOSED);
-            updateState(CHANNEL_CONTACT_MB, state);
         }
     }
 }

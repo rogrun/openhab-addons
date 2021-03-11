@@ -26,7 +26,7 @@ public final class TelenotCommand {
     private static final String TERM = "\r\n";
 
     private static final String COMMAND_REBOOT = "=";
-    private static final String COMMAND_ACK = "6802026840024216";
+    private static final String COMMAND_SEND_NORM = "6802026840024216";
     private static final String COMMAND_CONF_ACK = "6802026800020216";
 
     public final String command;
@@ -58,7 +58,118 @@ public final class TelenotCommand {
      *
      * @return TelenotCommand object containing the constructed command
      */
-    public static TelenotCommand sendACK() {
-        return new TelenotCommand(COMMAND_ACK);
+    public static TelenotCommand sendNorm() {
+        return new TelenotCommand(COMMAND_SEND_NORM);
+    }
+
+    /**
+     * Construct an Telenot command to disarm area.
+     *
+     * @param address The SB area number (1-8) for the command.
+     * @return TelenotCommand object containing the constructed command
+     * @throws IllegalArgumentException
+     */
+    public static TelenotCommand disarmArea(int address) throws IllegalArgumentException {
+        if (address < 1 || address > 8) {
+            throw new IllegalArgumentException("Invalid parameter(s)");
+        }
+        String hex = Integer.toHexString(1320 + (address * 8));
+        String msg = "6809096873010502000" + hex + "02E1";
+        msg = msg + checksum(msg) + "16";
+        return new TelenotCommand(msg);
+    }
+
+    /**
+     * Construct an Telenot command to internal arm area.
+     *
+     * @param address The SB area number (1-8) for the command.
+     * @return TelenotCommand object containing the constructed command
+     * @throws IllegalArgumentException
+     */
+    public static TelenotCommand intArmArea(int address) throws IllegalArgumentException {
+        if (address < 1 || address > 8) {
+            throw new IllegalArgumentException("Invalid parameter(s)");
+        }
+        String hex = Integer.toHexString(1321 + (address * 8));
+        String msg = "6809096873010502000" + hex + "0262";
+        msg = msg + checksum(msg) + "16";
+        return new TelenotCommand(msg);
+    }
+
+    /**
+     * Construct an Telenot command to external arm area.
+     *
+     * @param address The SB area number (1-8) for the command.
+     * @return TelenotCommand object containing the constructed command
+     * @throws IllegalArgumentException
+     */
+    public static TelenotCommand extArmArea(int address) throws IllegalArgumentException {
+        if (address < 1 || address > 8) {
+            throw new IllegalArgumentException("Invalid parameter(s)");
+        }
+        String hex = Integer.toHexString(1322 + (address * 8));
+        String msg = "6809096873010502000" + hex + "0261";
+        msg = msg + checksum(msg) + "16";
+        return new TelenotCommand(msg);
+    }
+
+    /**
+     * Construct an Telenot command to reset alarm area.
+     *
+     * @param address The SB area number (1-8) for the command.
+     * @param state The new state (0 or 1) for the area.
+     * @return TelenotCommand object containing the constructed command
+     * @throws IllegalArgumentException
+     */
+    public static TelenotCommand resetAlarm(int address) throws IllegalArgumentException {
+        if (address < 1 || address > 8) {
+            throw new IllegalArgumentException("Invalid parameter(s)");
+        }
+        String hex = Integer.toHexString(1323 + (address * 8));
+        String msg = "6809096873010502000" + hex + "0252";
+        msg = msg + checksum(msg) + "16";
+        return new TelenotCommand(msg);
+    }
+
+    /**
+     * Construct an Telenot command to enable/disable reporting area.
+     *
+     * @param address The SB area number (1-8) for the command.
+     * @param state The new state (0 or 1) for the area.
+     * @return TelenotCommand object containing the constructed command
+     * @throws IllegalArgumentException
+     */
+    public static TelenotCommand disableReportingPoint(int address, int state) throws IllegalArgumentException {
+        if (address < 1 || address > 128 || state < 0 || state > 1) {
+            throw new IllegalArgumentException("Invalid parameter(s)");
+        }
+        String hex = Integer.toHexString(1519 + address);
+        String msg = "";
+        if (state == 1) {
+            msg = "6809096873000502000" + hex + "0251";
+            msg = msg + checksum(msg) + "16";
+        } else if (state == 0) {
+            msg = "6809096873010502000" + hex + "02D1";
+            msg = msg + checksum(msg) + "16";
+        }
+        return new TelenotCommand(msg);
+    }
+
+    /**
+     * Converts String into checksum
+     */
+    public static String checksum(String s) {
+        String sum = "";
+        int x = 0;
+        int dataLength = Integer.parseInt(s.substring(2, 4), 16);
+        int a = 8;
+
+        for (int i = 0; i < dataLength; i++) {
+            x = x + Integer.parseInt(s.substring(a, a + 2), 16);
+            a = a + 2;
+        }
+        sum = Integer.toHexString(x);
+        sum = sum.substring(1, 3);
+        return sum;
     }
 }

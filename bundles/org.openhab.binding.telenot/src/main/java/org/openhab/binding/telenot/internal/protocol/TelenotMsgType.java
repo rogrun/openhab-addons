@@ -25,7 +25,7 @@ import org.eclipse.jdt.annotation.Nullable;
  */
 @NonNullByDefault
 public enum TelenotMsgType {
-    ACK, // ACK Message
+    SEND_NORM, // ACK Message
     CONF_ACK, // CONF_ACK Message
     MP, // Meldebereiche
     SB, // Sicherungsbereiche
@@ -45,17 +45,17 @@ public enum TelenotMsgType {
     private static Map<String, TelenotMsgType> startToMsgType = new HashMap<>();
 
     static {
-        startToMsgType.put("6802026840024216", TelenotMsgType.ACK);
+        startToMsgType.put("6802026840024216", TelenotMsgType.SEND_NORM);
         startToMsgType.put("6802026800020216", TelenotMsgType.CONF_ACK);
 
-        // MP Address
-        startToMsgType.put("682e2e687302222400000001", TelenotMsgType.MP); // FW: 24.44
-        startToMsgType.put("6846466873023a2400050002", TelenotMsgType.MP); // FW: 25.56
-        startToMsgType.put("686060687302542400050002", TelenotMsgType.MP); // FW: 33.68
+        // MP Address (Inputs)
+        // startToMsgType.put("682e2e687302222400000001", TelenotMsgType.MP); // FW: 24.44
+        // startToMsgType.put("6846466873023a2400050002", TelenotMsgType.MP); // FW: 25.56
+        // startToMsgType.put("686060687302542400050002", TelenotMsgType.MP); // FW: 33.68
 
-        // State SB Address and MG State
-        startToMsgType.put("683e3e687302322400050002", TelenotMsgType.SB); // FW: 24.44
-        startToMsgType.put("689393687302872400000001", TelenotMsgType.SB); // FW: 33.68
+        // State SB Address and MG State (Outputs)
+        // startToMsgType.put("683e3e687302322400050002", TelenotMsgType.SB); // FW: 24.44
+        // startToMsgType.put("689393687302872400000001", TelenotMsgType.SB); // FW: 33.68
 
         // Details for Sicherungsbereich 1 (2c2c)
 
@@ -64,14 +64,14 @@ public enum TelenotMsgType {
         // REGEX ^682c2c6873020502\w\w\w\w\w\w01(22|a2)(.*)$
         // startToMsgType.put("682c2c687302050201000301", TelenotMsgType.ALARM);
 
-        // info message "sytem externally armed" ;"682c2c68730205020005320161"
-        startToMsgType.put("682c2c687302050200053201", TelenotMsgType.SYS_EXT_ARMED);
+        // // info message "sytem externally armed" ;"682c2c68730205020005320161"
+        // startToMsgType.put("682c2c687302050200053201", TelenotMsgType.SYS_EXT_ARMED);
 
-        // info message "sytem internally armed" ;"682c2c68730205020005310162"
-        startToMsgType.put("682c2c687302050200053101", TelenotMsgType.SYS_INT_ARMED);
+        // // info message "sytem internally armed" ;"682c2c68730205020005310162"
+        // startToMsgType.put("682c2c687302050200053101", TelenotMsgType.SYS_INT_ARMED);
 
-        // info message "sytem disarmed" ;"682c2c687302050200053001e1"
-        startToMsgType.put("682c2c687302050200053001", TelenotMsgType.SYS_DISARMED);
+        // // info message "sytem disarmed" ;"682c2c687302050200053001e1"
+        // startToMsgType.put("682c2c687302050200053001", TelenotMsgType.SYS_DISARMED);
 
         // info message "system intrusion detection" ;"682c2c68730205020100100123"
         // info message "system intrusion cleared" ;"682c2c687302050201001001a3"
@@ -91,12 +91,12 @@ public enum TelenotMsgType {
         // info message "optical flasher malfunction cleared" ";681a1a687302050200001301b0"
         startToMsgType.put("681a1a687302050200001301", TelenotMsgType.OPTICAL_FLASHER_MALFUNCTION);
 
-        // info message "acoustic alarm horn 1 malfuntion" ;"681a1a68730205020000110130"
-        // info message "acoustic alarm horn 1 malfuntion cleared" ;"681a1a687302050200001101b0"
+        // info message "acoustic alarm horn 1 malfunction" ;"681a1a68730205020000110130"
+        // info message "acoustic alarm horn 1 malfunction cleared" ;"681a1a687302050200001101b0"
         startToMsgType.put("681a1a687302050200001101", TelenotMsgType.HORN_1_MALFUNCTION);
 
-        // info message "acoustic alarm horn 2 malfuntion" ;"681a1a68730205020000120130"
-        // info message "acoustic alarm horn 2 malfuntion cleared" ;"681a1a687302050200001201b0"
+        // info message "acoustic alarm horn 2 malfunction" ;"681a1a68730205020000120130"
+        // info message "acoustic alarm horn 2 malfunction cleared" ;"681a1a687302050200001201b0"
         startToMsgType.put("681a1a687302050200001201", TelenotMsgType.HORN_2_MALFUNCTION);
 
         // unknown signal ;"681a1a687302050200ffff0153"
@@ -118,22 +118,35 @@ public enum TelenotMsgType {
         }
         if (s.length() == 16) {
             mt = startToMsgType.get(s.substring(0, 16));
-        } else if (s.length() == 17) {
-            mt = startToMsgType.get(s.substring(0, 17));
         } else if (s.length() > 16) {
             mt = startToMsgType.get(s.substring(0, 24));
-        } else {
-            mt = startToMsgType.get(s.substring(0, 4));
         }
 
+        String regEX;
         if (mt == null) {
-            mt = startToMsgType.get(s.substring(0, 16));
-        }
-
-        if (mt == null) {
-            String regEX = "^682c2c6873020502\\w\\w\\w\\w\\w\\w01(22|a2)(.*)$";
+            regEX = "^68\\w\\w\\w\\w687302\\w\\w2400000001(.*)16$";
+            if (s.matches(regEX)) {
+                mt = TelenotMsgType.MP;
+            }
+            regEX = "^68\\w\\w\\w\\w687302\\w\\w2400050002(.*)16$";
+            if (s.matches(regEX)) {
+                mt = TelenotMsgType.SB;
+            }
+            regEX = "^682c2c6873020502\\w\\w\\w\\w\\w\\w01(22|a2)(.*)$";
             if (s.matches(regEX)) {
                 mt = TelenotMsgType.ALARM;
+            }
+            regEX = "^682c2c6873020502\\w\\w\\w\\w\\w\\w0161(.*)$";
+            if (s.matches(regEX)) {
+                mt = TelenotMsgType.SYS_EXT_ARMED;
+            }
+            regEX = "^682c2c6873020502\\w\\w\\w\\w\\w\\w0162(.*)$";
+            if (s.matches(regEX)) {
+                mt = TelenotMsgType.SYS_INT_ARMED;
+            }
+            regEX = "^682c2c6873020502\\w\\w\\w\\w\\w\\w01e1(.*)$";
+            if (s.matches(regEX)) {
+                mt = TelenotMsgType.SYS_DISARMED;
             }
         }
 
