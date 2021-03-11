@@ -104,9 +104,7 @@ public class SBHandler extends TelenotThingHandler {
     public void handleCommand(ChannelUID channelUID, Command command) {
         if (channelUID.getId().equals(CHANNEL_DISARM)) {
             if (command instanceof OnOffType) {
-                if (command == OnOffType.OFF) {
-                    // sendCommand(TelenotCommand.disarmArea(config.address));
-                } else if (command == OnOffType.ON) {
+                if (command == OnOffType.ON) {
                     sendCommand(TelenotCommand.sendNorm());
                     sendCommand(TelenotCommand.disarmArea(config.address));
                     // setChannelState(OnOffType.ON);
@@ -134,12 +132,7 @@ public class SBHandler extends TelenotThingHandler {
             }
         } else if (channelUID.getId().equals(CHANNEL_RESET_ALARM)) {
             if (command instanceof OnOffType) {
-                if (command == OnOffType.OFF) {
-                    // sendCommand(TelenotCommand.sendNorm());
-                    // sendCommand(TelenotCommand.resetAlarm(config.address, 0));
-                    // sendCommand(TelenotCommand.extArmArea(config.address, 1));
-                    // setChannelState(OnOffType.OFF);
-                } else if (command == OnOffType.ON) {
+                if (command == OnOffType.ON) {
                     sendCommand(TelenotCommand.sendNorm());
                     sendCommand(TelenotCommand.resetAlarm(config.address));
                 }
@@ -149,7 +142,6 @@ public class SBHandler extends TelenotThingHandler {
 
     @Override
     public void handleUpdate(TelenotMessage msg) {
-
         if (msg instanceof SBMessage) {
             SBMessage sbMsg = (SBMessage) msg;
             if (config.address == sbMsg.address) {

@@ -100,7 +100,6 @@ public class MBHandler extends TelenotThingHandler {
     @Override
     public void handleUpdate(TelenotMessage msg) {
         if (msg instanceof MBMessage) {
-
             MBMessage mbMsg = (MBMessage) msg;
 
             if (config.address == mbMsg.address) {
