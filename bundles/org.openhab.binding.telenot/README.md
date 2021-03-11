@@ -67,9 +67,10 @@ The Telenot things expose the following channels:
 
 ### mb
 
-| channel   | type    | RO/RW | description                   |
-|-----------|---------|-------|-------------------------------|
-| contactMB | Contact |   RO  | Reporting area contact state  |
+| channel   | type    | RO/RW | description                    |
+|-----------|---------|-------|--------------------------------|
+| contactMB | Contact |   RO  | Reporting area contact state   |
+| disableMB | Switch  |   RW  | Disable Reporting area contact |
 
 ### mp
 
@@ -79,21 +80,20 @@ The Telenot things expose the following channels:
 
 ### sb
 
-| channel                  | type   | RO/RW | description                              |
-|--------------------------|--------|-------|------------------------------------------|
-| disarmed                 | Switch |  RO   | Security area is disarmend               |
-| internallyArmed          | Switch |  RO   | Security area is internally armend       |
-| externallyArmed          | Switch |  RO   | Security area is externally armend       |
-| alarm                    | Switch |  RO   | Security area alarm                      |
-| malfuntion               | Switch |  RO   | Security area malfunction                |
-| readyToArmInternally     | Switch |  RO   | Security area is ready to arm internally |
-| readyToArmExternally     | Switch |  RO   | Security area is ready to arm externally |
-| statusInternalSignalHorn | Switch |  RO   | Security area state of internally horn   |
-
-### emaState
-
 | channel                    | type     | RO/RW | description                                                |
 |----------------------------|----------|-------|------------------------------------------------------------|
+| disarmed                   | Switch   |  RO   | State for security area is disarmend                       |
+| internallyArmed            | Switch   |  RO   | State for security area is internally armend               |
+| externallyArmed            | Switch   |  RO   | State for security area is externally armend               |
+| alarm                      | Switch   |  RO   | Security area alarm                                        |
+| disarm                     | Switch   |  RW   | Disarm security area                                       |
+| internalArm                | Switch   |  RW   | Arm internally security area                               |
+| externalArm                | Switch   |  RW   | Arm externally security area                               |
+| resetAlarm                 | Switch   |  RW   | Reset security area alarm                                  |
+| malfunction                | Switch   |  RO   | Security area malfunction                                  |
+| readyToArmInternally       | Switch   |  RO   | Security area is ready to arm internally                   |
+| readyToArmExternally       | Switch   |  RO   | Security area is ready to arm externally                   |
+| statusInternalSignalHorn   | Switch   |  RO   | Security area state of internally horn                     |
 | disarmedDatetime           | Datetime |  RO   | Date and time the system was disarmed                      |
 | disarmedContact            | String   |  RO   | Name of the contact wich dis armed the system              |
 | intArmedDatetime           | Datetime |  RO   | Date and time the system was internally armed              |
@@ -103,6 +103,12 @@ The Telenot things expose the following channels:
 | alarmDatetime              | Datetime |  RO   | Date and time alarm was detected                           |
 | alarmContact               | String   |  RO   | Name of the contact where alarm was detected               |
 | alarmSetClear              | Switch   |  RO   | State alarm was set / clear                                |
+
+
+### emaState
+
+| channel                    | type     | RO/RW | description                                                |
+|----------------------------|----------|-------|------------------------------------------------------------|
 | intrusionDatetime          | Datetime |  RO   | Date and time intrusion was detected                       |
 | intrusionContact           | String   |  RO   | Name of the contact where intrusion was detected           |
 | intrusionSetClear          | Switch   |  RO   | State intrusion was set / clear                            |
