@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.binding.telenot.internal.handler.MPHandler;
+import org.openhab.binding.telenot.internal.handler.SBHandler;
 import org.openhab.binding.telenot.internal.handler.TelenotBridgeHandler;
 import org.openhab.core.config.discovery.AbstractDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
@@ -41,7 +41,7 @@ public class TelenotDiscoveryService extends AbstractDiscoveryService {
     private final Logger logger = LoggerFactory.getLogger(TelenotDiscoveryService.class);
 
     private TelenotBridgeHandler bridgeHandler;
-    private final Set<String> discoveredMPSet = new HashSet<>();
+    private final Set<String> discoveredSBSet = new HashSet<>();
 
     public TelenotDiscoveryService(TelenotBridgeHandler bridgeHandler) throws IllegalArgumentException {
         super(DISCOVERABLE_DEVICE_TYPE_UIDS, 0, false);
@@ -53,25 +53,25 @@ public class TelenotDiscoveryService extends AbstractDiscoveryService {
         // Ignore start scan requests
     }
 
-    public void processMP(int address) {
-        String token = MPHandler.mpID(address);
-        if (!discoveredMPSet.contains(token)) {
-            notifyDiscoveryOfMP(address, token);
-            discoveredMPSet.add(token);
+    public void processSB(int address) {
+        String token = SBHandler.sbID(address);
+        if (!discoveredSBSet.contains(token)) {
+            notifyDiscoveryOfSB(address, token);
+            discoveredSBSet.add(token);
         }
     }
 
-    private void notifyDiscoveryOfMP(int address, String idString) {
+    private void notifyDiscoveryOfSB(int address, String idString) {
         ThingUID bridgeUID = bridgeHandler.getThing().getUID();
-        ThingUID uid = new ThingUID(THING_TYPE_MP, bridgeUID, idString);
+        ThingUID uid = new ThingUID(THING_TYPE_SB, bridgeUID, idString);
 
         Map<String, Object> properties = new HashMap<>();
         properties.put(PROPERTY_ADDRESS, address);
         properties.put(PROPERTY_ID, idString);
-
+        String label = "Telenot Security Area " + idString;
         DiscoveryResult result = DiscoveryResultBuilder.create(uid).withBridge(bridgeUID).withProperties(properties)
-                .withRepresentationProperty(PROPERTY_ID).build();
+                .withRepresentationProperty(PROPERTY_ID).withLabel(label).build();
         thingDiscovered(result);
-        logger.debug("Discovered MP {}", uid);
+        logger.debug("Discovered SB {}", uid);
     }
 }

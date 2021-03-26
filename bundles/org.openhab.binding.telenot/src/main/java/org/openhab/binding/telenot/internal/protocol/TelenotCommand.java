@@ -22,17 +22,19 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  */
 @NonNullByDefault
 public final class TelenotCommand {
-
     private static final String TERM = "\r\n";
 
     private static final String COMMAND_REBOOT = "=";
     private static final String COMMAND_SEND_NORM = "6802026840024216";
     private static final String COMMAND_CONF_ACK = "6802026800020216";
+    private static final String COMMAND_USED_STATE = "680909687302051000000071241f16";
 
     public final String command;
+    public final String logMsg;
 
-    public TelenotCommand(String command) {
+    public TelenotCommand(String command, String logMsg) {
         this.command = command + TERM;
+        this.logMsg = logMsg;
     }
 
     @Override
@@ -41,7 +43,7 @@ public final class TelenotCommand {
     }
 
     public static TelenotCommand reboot() {
-        return new TelenotCommand(COMMAND_REBOOT);
+        return new TelenotCommand(COMMAND_REBOOT, "");
     }
 
     /**
@@ -50,7 +52,7 @@ public final class TelenotCommand {
      * @return TelenotCommand object containing the constructed command
      */
     public static TelenotCommand confirmACK() {
-        return new TelenotCommand(COMMAND_CONF_ACK);
+        return new TelenotCommand(COMMAND_CONF_ACK, "Confirm_ACK");
     }
 
     /**
@@ -59,7 +61,16 @@ public final class TelenotCommand {
      * @return TelenotCommand object containing the constructed command
      */
     public static TelenotCommand sendNorm() {
-        return new TelenotCommand(COMMAND_SEND_NORM);
+        return new TelenotCommand(COMMAND_SEND_NORM, "SEND_NORM");
+    }
+
+    /**
+     * Construct an Telenot command to return used cntacts.
+     *
+     * @return TelenotCommand object containing the constructed command
+     */
+    public static TelenotCommand sendUsedState() {
+        return new TelenotCommand(COMMAND_USED_STATE, "Used Contacts");
     }
 
     /**
@@ -76,7 +87,7 @@ public final class TelenotCommand {
         String hex = Integer.toHexString(1320 + (address * 8));
         String msg = "6809096873010502000" + hex + "02E1";
         msg = msg + checksum(msg) + "16";
-        return new TelenotCommand(msg);
+        return new TelenotCommand(msg, "DISARM security area msg: " + msg);
     }
 
     /**
@@ -93,7 +104,7 @@ public final class TelenotCommand {
         String hex = Integer.toHexString(1321 + (address * 8));
         String msg = "6809096873010502000" + hex + "0262";
         msg = msg + checksum(msg) + "16";
-        return new TelenotCommand(msg);
+        return new TelenotCommand(msg, "INT_ARM security area msg: " + msg);
     }
 
     /**
@@ -110,7 +121,7 @@ public final class TelenotCommand {
         String hex = Integer.toHexString(1322 + (address * 8));
         String msg = "6809096873010502000" + hex + "0261";
         msg = msg + checksum(msg) + "16";
-        return new TelenotCommand(msg);
+        return new TelenotCommand(msg, "EXT_ARM security area msg: " + msg);
     }
 
     /**
@@ -128,7 +139,7 @@ public final class TelenotCommand {
         String hex = Integer.toHexString(1323 + (address * 8));
         String msg = "6809096873010502000" + hex + "0252";
         msg = msg + checksum(msg) + "16";
-        return new TelenotCommand(msg);
+        return new TelenotCommand(msg, "RESET_ALARM security area msg: " + msg);
     }
 
     /**
@@ -145,14 +156,53 @@ public final class TelenotCommand {
         }
         String hex = Integer.toHexString(1519 + address);
         String msg = "";
+        String logString = "";
         if (state == 1) {
             msg = "6809096873000502000" + hex + "0251";
             msg = msg + checksum(msg) + "16";
+            logString = "DISABLE_REPORTING_POINT msg: " + msg;
         } else if (state == 0) {
             msg = "6809096873010502000" + hex + "02D1";
             msg = msg + checksum(msg) + "16";
+            logString = "ENABLE_REPORTING_POINT msg: " + msg;
         }
-        return new TelenotCommand(msg);
+        return new TelenotCommand(msg, logString);
+    }
+
+    /**
+     * Construct an Telenot command to enable/disable reporting area.
+     *
+     * @param address The SB area number (1-8) for the command.
+     * @param state The new state (0 or 1) for the area.
+     * @return TelenotCommand object containing the constructed command
+     * @throws IllegalArgumentException
+     */
+    public static TelenotCommand disableHexReportingPoint(String address, int state) throws IllegalArgumentException {
+        String msg = "";
+        String logString = "";
+        if (state == 1) {
+            msg = "680909687300050200" + address + "0251";
+            msg = msg + checksum(msg) + "16";
+            logString = "DISABLE_REPORTING_POINT msg: " + msg;
+        } else if (state == 0) {
+            msg = "680909687301050200" + address + "02D1";
+            msg = msg + checksum(msg) + "16";
+            logString = "ENABLE_REPORTING_POINT msg: " + msg;
+        }
+        return new TelenotCommand(msg, logString);
+    }
+
+    /**
+     * Construct an Telenot command to get contact info.
+     *
+     * @param address The hex string (address) for the contact.
+     * @return TelenotCommand object containing the constructed command
+     */
+    public static TelenotCommand getContactInfo(String address) {
+        String hex = address.substring(2, 6);
+        String msg = "680909687302051000" + hex + "730C";
+        msg = msg + checksum(msg) + "16";
+        return new TelenotCommand(msg, "GET_CONTACT_INFO msg: " + msg);
     }
 
     /**

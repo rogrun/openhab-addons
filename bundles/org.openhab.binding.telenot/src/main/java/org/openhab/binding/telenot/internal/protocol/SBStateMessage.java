@@ -50,10 +50,8 @@ public class SBStateMessage extends TelenotMessage {
             case "SYS_DISARMED":
                 Integer a = Integer.parseInt(msg.substring(18, 22), 16);
                 double b = a - 1327;
-                // double c = b / 8;
                 double d = Math.ceil(b / 8);
                 ad = (int) d;
-                // ad = (int) (Math.ceil((Integer.parseInt(msg.substring(18, 22), 16) - 1327) / 8));
                 break;
             case "ALARM":
                 ad = Integer.parseInt(msg.substring(16, 18), 16);
@@ -113,14 +111,9 @@ public class SBStateMessage extends TelenotMessage {
         String strcontact = strBuilder.toString();
 
         boolean bool = false;
-        // int blint = Integer.parseInt(msg.substring(24, 26), 16);
         if (Integer.parseInt(msg.substring(24, 26), 16) == 34) {
             bool = true;
         }
-
-        // if (msg.substring(24, 26) == "b0" || msg.substring(24, 26) == "b2" || msg.substring(24, 26) == "b3" ) {
-        // bool = false;
-        // }
 
         try {
             address = ad;

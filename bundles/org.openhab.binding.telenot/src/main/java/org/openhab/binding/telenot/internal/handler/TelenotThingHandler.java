@@ -36,6 +36,7 @@ public abstract class TelenotThingHandler extends BaseThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(TelenotThingHandler.class);
     protected final AtomicBoolean firstUpdateReceived = new AtomicBoolean(false);
+    protected static AtomicBoolean readyToSendData = new AtomicBoolean(false);
 
     public TelenotThingHandler(Thing thing) {
         super(thing);
@@ -65,11 +66,18 @@ public abstract class TelenotThingHandler extends BaseThingHandler {
     public abstract void initChannelState();
 
     /**
-     * Notify handler of a message from the AD via the bridge
+     * Notify handler of a message from the Telenot via the bridge
      *
      * @param msg The TelenotMessage to handle
      */
     public abstract void handleUpdate(TelenotMessage msg);
+
+    /**
+     * Notify handler of a channel message from the Telenot via the bridge
+     *
+     * @param msg The TelenotMessage to handle
+     */
+    public abstract void handleUpdateChannel(TelenotMessage msg);
 
     @Override
     public void bridgeStatusChanged(ThingStatusInfo bridgeStatusInfo) {
@@ -89,7 +97,14 @@ public abstract class TelenotThingHandler extends BaseThingHandler {
      *
      * @param command command to send
      */
-    protected void sendCommand(TelenotCommand command) {
+    public void sendCommand(TelenotCommand command) {
+        boolean wait = true;
+        while (!readyToSendData.get()) {
+            if (wait) {
+                logger.debug("waiting for ready to send data");
+                wait = false;
+            }
+        }
         Bridge bridge = getBridge();
         TelenotBridgeHandler bridgeHandler = bridge == null ? null : (TelenotBridgeHandler) bridge.getHandler();
 

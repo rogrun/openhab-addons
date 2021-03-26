@@ -47,8 +47,8 @@ public class SBHandler extends TelenotThingHandler {
         super(thing);
     }
 
-    /** Construct MP id from address */
-    public static final String mpID(int address) {
+    /** Construct SB id from address */
+    public static final String sbID(int address) {
         return String.format("%d", address);
     }
 
@@ -62,7 +62,7 @@ public class SBHandler extends TelenotThingHandler {
         }
         logger.debug("SB handler initializing for address {}", config.address);
 
-        String id = mpID(config.address);
+        String id = sbID(config.address);
         updateProperty(PROPERTY_ID, id); // set representation property used by discovery
 
         initDeviceState();
@@ -105,7 +105,7 @@ public class SBHandler extends TelenotThingHandler {
         if (channelUID.getId().equals(CHANNEL_DISARM)) {
             if (command instanceof OnOffType) {
                 if (command == OnOffType.ON) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: DISARM security area");
                     sendCommand(TelenotCommand.disarmArea(config.address));
                     // setChannelState(OnOffType.ON);
                 }
@@ -113,31 +113,42 @@ public class SBHandler extends TelenotThingHandler {
         } else if (channelUID.getId().equals(CHANNEL_INTERNAL_ARM)) {
             if (command instanceof OnOffType) {
                 if (command == OnOffType.OFF) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: DISARM security area");
                     sendCommand(TelenotCommand.disarmArea(config.address));
                 } else if (command == OnOffType.ON) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: INT_ARM security area");
                     sendCommand(TelenotCommand.intArmArea(config.address));
                 }
             }
         } else if (channelUID.getId().equals(CHANNEL_EXTERNAL_ARM)) {
             if (command instanceof OnOffType) {
                 if (command == OnOffType.OFF) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: DISARM security area");
                     sendCommand(TelenotCommand.disarmArea(config.address));
                 } else if (command == OnOffType.ON) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: EXT_ARM security area");
                     sendCommand(TelenotCommand.extArmArea(config.address));
                 }
             }
         } else if (channelUID.getId().equals(CHANNEL_RESET_ALARM)) {
             if (command instanceof OnOffType) {
                 if (command == OnOffType.ON) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: RESET_ALARM security area");
                     sendCommand(TelenotCommand.resetAlarm(config.address));
+                    updateState(CHANNEL_RESET_ALARM, OnOffType.OFF);
                 }
             }
         }
+    }
+
+    @Override
+    public void handleUpdateChannel(TelenotMessage msg) {
+        logger.trace("handleUpdateChannel");
     }
 
     @Override

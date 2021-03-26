@@ -84,6 +84,11 @@ public class MPHandler extends TelenotThingHandler {
     }
 
     @Override
+    public void handleUpdateChannel(TelenotMessage msg) {
+        logger.trace("handleUpdateChannel");
+    }
+
+    @Override
     public void handleUpdate(TelenotMessage msg) {
         if (!(msg instanceof MPMessage)) {
             return;

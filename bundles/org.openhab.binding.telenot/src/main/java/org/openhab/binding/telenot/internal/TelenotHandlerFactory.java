@@ -25,8 +25,10 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.telenot.internal.handler.EMAStateHandler;
 import org.openhab.binding.telenot.internal.handler.IPBridgeHandler;
+import org.openhab.binding.telenot.internal.handler.InputHandler;
 import org.openhab.binding.telenot.internal.handler.MBHandler;
 import org.openhab.binding.telenot.internal.handler.MPHandler;
+import org.openhab.binding.telenot.internal.handler.OutputHandler;
 import org.openhab.binding.telenot.internal.handler.SBHandler;
 import org.openhab.binding.telenot.internal.handler.TelenotBridgeHandler;
 import org.openhab.core.config.discovery.DiscoveryService;
@@ -52,9 +54,9 @@ import org.slf4j.LoggerFactory;
 @Component(configurationPid = "binding.telenot", service = ThingHandlerFactory.class)
 public class TelenotHandlerFactory extends BaseThingHandlerFactory {
 
-    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections.unmodifiableSet(
-            Stream.of(THING_TYPE_IPBRIDGE, THING_TYPE_SB, THING_TYPE_MP, THING_TYPE_MB, THING_TYPE_EMA_STATE)
-                    .collect(Collectors.toSet()));
+    private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Collections
+            .unmodifiableSet(Stream.of(THING_TYPE_IPBRIDGE, THING_TYPE_SB, THING_TYPE_MP, THING_TYPE_MB,
+                    THING_TYPE_EMA_STATE, THING_TYPE_INPUT, THING_TYPE_OUTPUT).collect(Collectors.toSet()));
 
     private final Logger logger = LoggerFactory.getLogger(TelenotHandlerFactory.class);
 
@@ -82,8 +84,11 @@ public class TelenotHandlerFactory extends BaseThingHandlerFactory {
             return new MPHandler(thing);
         } else if (THING_TYPE_EMA_STATE.equals(thingTypeUID)) {
             return new EMAStateHandler(thing);
+        } else if (THING_TYPE_INPUT.equals(thingTypeUID)) {
+            return new InputHandler(thing);
+        } else if (THING_TYPE_OUTPUT.equals(thingTypeUID)) {
+            return new OutputHandler(thing);
         }
-
         return null;
     }
 

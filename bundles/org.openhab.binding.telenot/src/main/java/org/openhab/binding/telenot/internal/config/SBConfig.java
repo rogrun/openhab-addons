@@ -22,5 +22,4 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
 @NonNullByDefault
 public class SBConfig {
     public int address = -1;
-    // public int channel = -1;
 }

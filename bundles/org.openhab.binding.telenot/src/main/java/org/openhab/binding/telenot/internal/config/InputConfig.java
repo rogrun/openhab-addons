@@ -13,19 +13,14 @@
 package org.openhab.binding.telenot.internal.config;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * The {@link IPBridgeConfig} class contains fields mapping thing configuration parameters for IPBridgeHandler.
+ * The {@link InputConfig} class contains fields mapping thing configuration parameters for InputHandler.
  *
  * @author Ronny Grun - Initial contribution
  */
 @NonNullByDefault
-public class IPBridgeConfig {
-    public @Nullable String hostname;
-    public int tcpPort = 4116;
+public class InputConfig {
+    public int address = -1;
     public boolean discovery = false;
-    public int reconnect = 2;
-    public int refreshData = 10;
-    public int timeout = 5;
 }

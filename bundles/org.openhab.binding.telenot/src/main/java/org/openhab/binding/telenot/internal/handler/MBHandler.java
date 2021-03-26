@@ -87,14 +87,21 @@ public class MBHandler extends TelenotThingHandler {
         if (channelUID.getId().equals(CHANNEL_DISABLE_MB)) {
             if (command instanceof OnOffType) {
                 if (command == OnOffType.OFF) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: ENABLE_REPORTING_POINT");
                     sendCommand(TelenotCommand.disableReportingPoint(config.address, 0));
                 } else if (command == OnOffType.ON) {
-                    sendCommand(TelenotCommand.sendNorm());
+                    // sendCommand(TelenotCommand.sendNorm());
+                    logger.debug("Received command: DISABLE_REPORTING_POINT");
                     sendCommand(TelenotCommand.disableReportingPoint(config.address, 1));
                 }
             }
         }
+    }
+
+    @Override
+    public void handleUpdateChannel(TelenotMessage msg) {
+        logger.trace("handleUpdateChannel");
     }
 
     @Override

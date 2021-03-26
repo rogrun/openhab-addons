@@ -12,10 +12,6 @@
  */
 package org.openhab.binding.telenot.internal.handler;
 
-//@formatter:off
-// import statc org.openhab.binding.telenot.internal.TelenotBindingConstants.*;
-//@formatter:on
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
@@ -23,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -34,6 +31,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.telenot.internal.TelenotDiscoveryService;
 import org.openhab.binding.telenot.internal.actions.BridgeActions;
 import org.openhab.binding.telenot.internal.protocol.EMAStateMessage;
+import org.openhab.binding.telenot.internal.protocol.InputMessage;
 import org.openhab.binding.telenot.internal.protocol.MBDMessage;
 import org.openhab.binding.telenot.internal.protocol.MBMessage;
 import org.openhab.binding.telenot.internal.protocol.MPMessage;
@@ -42,6 +40,9 @@ import org.openhab.binding.telenot.internal.protocol.SBStateMessage;
 import org.openhab.binding.telenot.internal.protocol.TelenotCommand;
 import org.openhab.binding.telenot.internal.protocol.TelenotMessage;
 import org.openhab.binding.telenot.internal.protocol.TelenotMsgType;
+import org.openhab.binding.telenot.internal.protocol.UsedContactInfoMessage;
+import org.openhab.binding.telenot.internal.protocol.UsedMbMessage;
+import org.openhab.core.config.core.Configuration;
 import org.openhab.core.thing.Bridge;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
@@ -74,10 +75,23 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
     private final Object msgReaderThreadLock = new Object();
     protected @Nullable TelenotDiscoveryService discoveryService;
     protected boolean discovery;
+    protected boolean refresh;
     protected volatile @Nullable Date lastReceivedTime;
     protected volatile boolean writeException;
 
+    protected volatile @Nullable ArrayList<String> usedInputContact = new ArrayList<String>();
+    protected volatile @Nullable ArrayList<String> usedOutputContact = new ArrayList<String>();
+    protected volatile @Nullable ArrayList<String> usedSecurityArea = new ArrayList<String>();
+    protected volatile @Nullable ArrayList<String> usedSecurityAreaContact = new ArrayList<String>();
+    protected volatile @Nullable ArrayList<String> usedReportingArea = new ArrayList<String>();
+
+    protected volatile @Nullable String lastMsgReverseBinaryArrayMP[] = { "0" };
+    protected volatile @Nullable String lastMsgReverseBinaryArraySB[] = { "0", "0", "0", "0", "0", "0", "0", "0" };
+    protected volatile @Nullable String lastMsgReverseBinaryArrayMB[] = { "0" };
+    protected volatile @Nullable String lastMsgReverseBinaryArrayMBD[] = { "0" };
+
     protected @Nullable ScheduledFuture<?> connectionCheckJob;
+    protected @Nullable ScheduledFuture<?> refreshSendDataJob;
     protected @Nullable ScheduledFuture<?> connectRetryJob;
 
     public TelenotBridgeHandler(Bridge bridge) {
@@ -110,7 +124,7 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
      * @param command Command string to send including terminator
      */
     public void sendTelenotCommand(TelenotCommand command) {
-        logger.debug("Sending Telenot command: {}", command);
+        logger.debug("Sending Telenot command: {}", command.logMsg);
         try {
             OutputStream bw = outputStream;
             if (bw != null) {
@@ -159,10 +173,16 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
         String message = null;
         try {
             // read from the stream
+            if (discovery) {
+                sendTelenotCommand(TelenotCommand.sendUsedState());
+                Configuration conf = editConfiguration();
+                conf.put("discovery", false);
+                updateConfiguration(conf);
+                logger.info("Starting discovery");
+            }
             baos = new ByteArrayOutputStream();
             byte[] content = new byte[2048];
             int bytesRead = -1;
-
             while (!Thread.interrupted() && inputStream != null && (bytesRead = inputStream.read(content)) != -1) {
                 baos.reset();
                 baos.write(content, 0, bytesRead);
@@ -171,37 +191,46 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
 
                 TelenotMsgType msgType = TelenotMsgType.getMsgType(message);
                 if (msgType != TelenotMsgType.INVALID) {
+                    logger.debug("Received {} message", msgType);
                     lastReceivedTime = new Date();
                 }
 
                 try {
                     switch (msgType) {
                         case SEND_NORM:
-                            logger.debug("Received SEND_NORM message");
-                            sendTelenotCommand(TelenotCommand.confirmACK());
-                            // sendTelenotCommand(TelenotCommand.sendACK()); // if sending this, Telenor returns this:
-                            // 680606680002021100011616
+                            // Check for new channel and description
+                            if (usedInputContact.size() != 0 && TelenotThingHandler.readyToSendData.get()) {
+                                String address = usedInputContact.get(0);
+                                sendTelenotCommand(TelenotCommand.getContactInfo(address));
+                            } else if (usedReportingArea.size() != 0 && TelenotThingHandler.readyToSendData.get()) {
+                                String address = usedReportingArea.get(0);
+                                sendTelenotCommand(TelenotCommand.getContactInfo(address));
+                            } else {
+                                if (TelenotThingHandler.readyToSendData.get()) {
+                                    TelenotThingHandler.readyToSendData.set(false);
+                                    logger.trace("Disable send data");
+                                }
+                                sendTelenotCommand(TelenotCommand.confirmACK());
+                            }
                             break;
                         case CONF_ACK:
-                            logger.debug("Received Confirm-ACK message");
-                            // sendTelenotCommand(TelenotCommand.confirmACK());
-                            // Send Command to C400
+                            TelenotThingHandler.readyToSendData.set(false);
                             break;
                         case MP:
-                            logger.debug("Received MP message");
                             parseMpMessage(msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
                             break;
                         case SB:
-                            logger.debug("Received SB message");
                             parseSbMessage(msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
+                            TelenotThingHandler.readyToSendData.set(true);
+                            refresh = false;
+                            logger.trace("Ready to send data");
                             break;
                         case SYS_INT_ARMED:
                         case SYS_EXT_ARMED:
                         case SYS_DISARMED:
                         case ALARM:
-                            logger.debug("Received SB state message: {}", msgType);
                             parseSbStateMessage(msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
                             break;
@@ -211,15 +240,39 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
                         case OPTICAL_FLASHER_MALFUNCTION:
                         case HORN_1_MALFUNCTION:
                         case HORN_2_MALFUNCTION:
-                            logger.debug("Received {} message", msgType);
                             parseEmaStateMessage(msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
-                            // sendTelenotCommand(TelenotCommand.sendACK());
+                            TelenotThingHandler.readyToSendData.set(true);
+                            logger.trace("Ready to send data");
+                            break;
+                        case USED_INPUTS:
+                            parseUsedInputsMessage(msgType, message);
+                            sendTelenotCommand(TelenotCommand.confirmACK());
+                            break;
+                        case USED_OUTPUTS:
+                            parseUsedOutputsMessage(msgType, message);
+                            sendTelenotCommand(TelenotCommand.confirmACK());
+                            TelenotThingHandler.readyToSendData.set(true);
+                            logger.trace("Ready to send data");
+                            break;
+                        case USED_CONTACTS_INFO:
+                        case USED_OUTPUT_CONTACTS_INFO:
+                        case USED_SB_CONTACTS_INFO:
+                        case USED_MB_CONTACTS_INFO:
+                            parseUsedContactInfoMessage(msgType, message);
+                            sendTelenotCommand(TelenotCommand.confirmACK());
+                            TelenotThingHandler.readyToSendData.set(true);
+                            break;
+                        case RESTART:
+                            sendTelenotCommand(TelenotCommand.confirmACK());
+                            TelenotThingHandler.readyToSendData.set(true);
+                            logger.trace("Ready to send data");
                             break;
                         case INVALID:
-                            logger.warn("INVALID MsgType: {} hexString: {}", msgType, message);
+                            logger.warn("Received {} MsgType | hexString: {}", msgType, message);
                             sendTelenotCommand(TelenotCommand.confirmACK());
-                            // sendTelenotCommand(TelenotCommand.sendACK());
+                            TelenotThingHandler.readyToSendData.set(true);
+                            logger.trace("Ready to send data");
                             break;
                         default:
                             break;
@@ -255,6 +308,7 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
     private void parseMpMessage(TelenotMsgType mt, String msg) throws MessageParseException {
         // mt is unused at the moment
         MPMessage mpMsg;
+        InputMessage inpMsg;
         StringBuilder sb = new StringBuilder();
 
         // msg = msg.substring(24, msg.length());
@@ -266,24 +320,32 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
         for (int i = 0; i < msgReverseBinaryArray.length; i++) {
             String d = msgReverseBinaryArray[i];
             for (int a = 1; a <= 8; a++) {
+                String value = d.substring(a - 1, a);
                 sb.append(addr);
                 sb.append(",");
                 sb.append(d.substring(a - 1, a));
+
                 try {
                     mpMsg = new MPMessage(sb.toString());
+                    inpMsg = new InputMessage(sb.toString());
                 } catch (IllegalArgumentException e) {
                     throw new MessageParseException(e.getMessage());
                 }
-
-                notifyChildHandlers(mpMsg);
-                TelenotDiscoveryService ds = discoveryService;
-                if (discovery && ds != null) {
-                    ds.processMP(mpMsg.address);
+                if (lastMsgReverseBinaryArrayMP.length != msgReverseBinaryArray.length) {
+                    notifyChildHandlers(mpMsg);
+                    notifyChildHandlers(inpMsg);
+                } else {
+                    String lastValue = lastMsgReverseBinaryArrayMP[i].substring(a - 1, a);
+                    if (!lastValue.equals(value) || refresh) {
+                        notifyChildHandlers(mpMsg);
+                        notifyChildHandlers(inpMsg);
+                    }
                 }
                 sb.setLength(0);
                 addr++;
             }
         }
+        lastMsgReverseBinaryArrayMP = msgReverseBinaryArray;
     }
 
     /**
@@ -310,21 +372,24 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
         int addr = 1;
         for (int i = 0; i < msgReverseBinaryArraySb.length; i++) {
             String d = msgReverseBinaryArraySb[i];
-            strBuilder.append(addr);
-            for (int a = 1; a <= 8; a++) {
-                strBuilder.append(",");
-                strBuilder.append(d.substring(a - 1, a));
+            String value = lastMsgReverseBinaryArraySB[i];
+            if (!value.equals(d) || refresh) {
+                strBuilder.append(addr);
+                for (int a = 1; a <= 8; a++) {
+                    strBuilder.append(",");
+                    strBuilder.append(d.substring(a - 1, a));
+                }
+                try {
+                    sbMsg = new SBMessage(strBuilder.toString());
+                } catch (IllegalArgumentException e) {
+                    throw new MessageParseException(e.getMessage());
+                }
+                notifyChildHandlers(sbMsg);
+                strBuilder.setLength(0);
             }
-            try {
-                sbMsg = new SBMessage(strBuilder.toString());
-            } catch (IllegalArgumentException e) {
-                throw new MessageParseException(e.getMessage());
-            }
-
-            notifyChildHandlers(sbMsg);
-            strBuilder.setLength(0);
             addr++;
         }
+        lastMsgReverseBinaryArraySB = msgReverseBinaryArraySb;
 
         MBMessage mbMsg;
         String msgMb = msg.substring(52, 84);
@@ -334,24 +399,28 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
         for (int i = 0; i < msgReverseBinaryArrayMb.length; i++) {
             String d = msgReverseBinaryArrayMb[i];
             for (int a = 1; a <= 8; a++) {
+                String value = d.substring(a - 1, a);
                 strBuilder.append(addrMb);
                 strBuilder.append(",");
-                strBuilder.append(d.substring(a - 1, a));
+                strBuilder.append(value);
                 try {
                     mbMsg = new MBMessage(strBuilder.toString());
                 } catch (IllegalArgumentException e) {
                     throw new MessageParseException(e.getMessage());
                 }
-
-                notifyChildHandlers(mbMsg);
-                // TelenotDiscoveryService ds = discoveryService;
-                // if (discovery && ds != null) {
-                // ds.processMP(mpMsg.address);
-                // }
+                if (lastMsgReverseBinaryArrayMB.length != msgReverseBinaryArrayMb.length) {
+                    notifyChildHandlers(mbMsg);
+                } else {
+                    String lastValue = lastMsgReverseBinaryArrayMB[i].substring(a - 1, a);
+                    if (!lastValue.equals(value) || refresh) {
+                        notifyChildHandlers(mbMsg);
+                    }
+                }
                 strBuilder.setLength(0);
                 addrMb++;
             }
         }
+        lastMsgReverseBinaryArrayMB = msgReverseBinaryArrayMb;
 
         MBDMessage mbdMsg;
         String msgMbd = msg.substring(84, 116);
@@ -361,29 +430,32 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
         for (int i = 0; i < msgReverseBinaryArrayMbd.length; i++) {
             String d = msgReverseBinaryArrayMbd[i];
             for (int a = 1; a <= 8; a++) {
+                String value = d.substring(a - 1, a);
                 strBuilder.append(addrMbd);
                 strBuilder.append(",");
-                strBuilder.append(d.substring(a - 1, a));
+                strBuilder.append(value);
                 try {
                     mbdMsg = new MBDMessage(strBuilder.toString());
                 } catch (IllegalArgumentException e) {
                     throw new MessageParseException(e.getMessage());
                 }
-
-                notifyChildHandlers(mbdMsg);
-
-                // TelenotDiscoveryService ds = discoveryService;
-                // if (discovery && ds != null) {
-                // ds.processMP(mpMsg.address);
-                // }
+                if (lastMsgReverseBinaryArrayMBD.length != msgReverseBinaryArrayMbd.length) {
+                    notifyChildHandlers(mbdMsg);
+                } else {
+                    String lastValue = lastMsgReverseBinaryArrayMBD[i].substring(a - 1, a);
+                    if (!lastValue.equals(value) || refresh) {
+                        notifyChildHandlers(mbdMsg);
+                    }
+                }
                 strBuilder.setLength(0);
                 addrMbd++;
             }
         }
+        lastMsgReverseBinaryArrayMBD = msgReverseBinaryArrayMbd;
     }
 
     /**
-     * Parse and handle SB State messages. The SB messages have
+     * Parse and handle SB State messages. The SB state messages have
      * identical format.
      *
      * @param mt message type of incoming message
@@ -403,6 +475,123 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
             throw new MessageParseException(e.getMessage());
         }
         notifyChildHandlers(sbStateMessage);
+    }
+
+    /**
+     * Parse and handle used input contacts messages. The used input contact messages have
+     * identical format.
+     *
+     * @param mt message type of incoming message
+     * @param msg string containing incoming message payload
+     * @throws MessageParseException
+     */
+    private void parseUsedInputsMessage(TelenotMsgType mt, String msg) throws MessageParseException {
+        logger.trace("MSG: {}", msg);
+
+        String msgInputContacts = msg.substring(24, 16 + (Integer.parseInt(msg.substring(12, 14), 16) * 2));
+        logger.trace("UsedContact: {}", msgInputContacts);
+
+        String msgReverseBinaryArray[] = hexStringToReverseBinaryArray(msgInputContacts);
+        int address = 0;
+        String hexAddr = "";
+        for (int i = 0; i < msgReverseBinaryArray.length; i++) {
+            String d = msgReverseBinaryArray[i];
+            for (int a = 1; a <= 8; a++) {
+                if (Integer.parseInt(d.substring(a - 1, a)) == 0) {
+                    hexAddr = Integer.toHexString(address);
+                    hexAddr = String.format("%s" + "%0" + (4 - hexAddr.length()) + "d%s", "0x", 0, hexAddr);
+                    usedInputContact.add(hexAddr);
+                }
+                address++;
+            }
+        }
+    }
+
+    /**
+     * Parse and handle used output contacts messages. The used output contact messages have
+     * identical format.
+     *
+     * @param mt message type of incoming message
+     * @param msg string containing incoming message payload
+     * @throws MessageParseException
+     */
+    private void parseUsedOutputsMessage(TelenotMsgType mt, String msg) throws MessageParseException {
+        logger.trace("MSG: {}", msg);
+
+        String msgOutputContacts = msg.substring(24, 16 + (Integer.parseInt(msg.substring(12, 14), 16) * 2));
+        logger.trace("UsedContact: {}", msgOutputContacts);
+
+        String msgReverseBinaryArray[] = hexStringToReverseBinaryArray(msgOutputContacts);
+        int address = 1280;
+        String hexAddr = "";
+        for (int i = 0; i < msgReverseBinaryArray.length; i++) {
+            String d = msgReverseBinaryArray[i];
+            for (int a = 1; a <= 8; a++) {
+                if (Integer.parseInt(d.substring(a - 1, a)) == 0) {
+                    hexAddr = Integer.toHexString(address);
+                    hexAddr = String.format("%s" + "%0" + (4 - hexAddr.length()) + "d%s", "0x", 0, hexAddr);
+                    if (address >= 1280 && address <= 1327) {
+                        usedOutputContact.add(hexAddr);
+                    } else if (address >= 1328 && address <= 1391) {
+                        double b = address - 1327;
+                        double sbNumber = Math.ceil(b / 8);
+                        int number = (int) sbNumber;
+                        String sbNum = String.format("%s", number);
+                        ArrayList<String> num = new ArrayList<String>();
+                        num.add(sbNum);
+                        if (!usedSecurityArea.equals(num)) {
+                            usedSecurityArea.add(sbNum);
+                        }
+                        usedSecurityAreaContact.add(hexAddr);
+                    } else if (address >= 1392 && address <= 1519) {
+                        usedReportingArea.add(hexAddr);
+                    }
+                }
+                address++;
+            }
+        }
+        TelenotDiscoveryService ds = discoveryService;
+        if (discovery && ds != null) {
+            for (String i : usedSecurityArea) {
+                int sbNum = Integer.parseInt(i);
+                ds.processSB(sbNum);
+            }
+        }
+    }
+
+    /**
+     * Parse and handle used inputs messages. The inputs messages have
+     * identical format.
+     *
+     * @param mt message type of incoming message
+     * @param msg string containing incoming message payload
+     * @throws MessageParseException
+     */
+    private void parseUsedContactInfoMessage(TelenotMsgType mt, String msg) throws MessageParseException {
+        logger.trace("MSG: {}", msg);
+        if (mt == TelenotMsgType.USED_CONTACTS_INFO && usedInputContact.size() != 0) {
+            UsedContactInfoMessage uciStateMessage;
+            String address = usedInputContact.get(0);
+            try {
+                uciStateMessage = new UsedContactInfoMessage(address + ":" + msg);
+            } catch (IllegalArgumentException e) {
+                throw new MessageParseException(e.getMessage());
+            }
+            notifyChildHandlersChannel(uciStateMessage);
+            usedInputContact.remove(0);
+        }
+
+        if (mt == TelenotMsgType.USED_MB_CONTACTS_INFO && usedReportingArea.size() != 0) {
+            UsedMbMessage umbStateMessage;
+            String address = usedReportingArea.get(0);
+            try {
+                umbStateMessage = new UsedMbMessage(address + ":" + msg);
+            } catch (IllegalArgumentException e) {
+                throw new MessageParseException(e.getMessage());
+            }
+            notifyChildHandlersChannel(umbStateMessage);
+            usedReportingArea.remove(0);
+        }
     }
 
     /**
@@ -442,8 +631,28 @@ public abstract class TelenotBridgeHandler extends BaseBridgeHandler {
                                     (handler instanceof MBHandler && msg instanceof MBMessage) ||
                                     (handler instanceof MBHandler && msg instanceof MBDMessage) ||
                                     (handler instanceof MPHandler && msg instanceof MPMessage) ||
+                                    (handler instanceof InputHandler && msg instanceof InputMessage) ||
+                                    (handler instanceof OutputHandler && msg instanceof MBMessage) ||
+                                    (handler instanceof OutputHandler && msg instanceof MBDMessage) ||
                                     (handler instanceof EMAStateHandler && msg instanceof EMAStateMessage))) {
                 handler.handleUpdate(msg);
+            }
+            //@formatter:on
+        }
+    }
+
+    /**
+     * Notify appropriate child thing handlers of an Telenot message by calling their handleUpdateChannel() methods.
+     *
+     * @param msg message to forward to child handler(s)
+     */
+    private void notifyChildHandlersChannel(TelenotMessage msg) {
+        for (Thing thing : getThing().getThings()) {
+            TelenotThingHandler handler = (TelenotThingHandler) thing.getHandler();
+            //@formatter:off
+            if (handler != null && ((handler instanceof InputHandler && msg instanceof UsedContactInfoMessage) ||
+                                    (handler instanceof OutputHandler && msg instanceof UsedMbMessage))) {
+                handler.handleUpdateChannel(msg);
             }
             //@formatter:on
         }

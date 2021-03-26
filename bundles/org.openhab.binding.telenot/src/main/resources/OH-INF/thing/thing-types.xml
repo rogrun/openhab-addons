@@ -23,13 +23,18 @@
 				<description>TCP port number for the Telenot connection</description>
 				<default>20108</default>
 			</parameter>
-			<!--
-				<parameter name="discovery" type="boolean">
+			<parameter name="discovery" type="boolean">
 				<label>Enable Discovery</label>
-				<description>Enable automatic discovery</description>
+				<description>Enable automatic discovery. After saving this, it goes to off and the discovery will start. </description>
 				<default>false</default>
-				</parameter>
-			-->
+			</parameter>
+			<parameter name="refreshData" type="integer" min="0" max="60" unit="min">
+				<label>Refresh Data Interval</label>
+				<description>The period in minutes that the handler will refresh the data to eventbus</description>
+				<unitLabel>minutes</unitLabel>
+				<default>10</default>
+				<advanced>true</advanced>
+			</parameter>
 			<parameter name="reconnect" type="integer" min="1" max="60" unit="min">
 				<label>Reconnect Interval</label>
 				<description>The period in minutes that the handler will wait between connection attempts and checks</description>
@@ -276,6 +281,51 @@
 				<label>Horn 2 malfunction Set/Clear</label>
 			</channel>
 		</channels>
+
+		<representation-property>id</representation-property>
+
+	</thing-type>
+
+	<!-- Telenot Input Thing Type -->
+	<thing-type id="input">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="ipbridge"/>
+		</supported-bridge-type-refs>
+
+		<label>Telenot Reporting Group (Discovery)</label>
+		<description>Thing for Telenot all discovered reporting group (Meldegruppen)</description>
+
+		<!--
+			<channels>
+			<channel id="getUsedState" typeId="switch-channel"/>
+			</channels>
+		-->
+
+		<representation-property>id</representation-property>
+		<!--
+			<config-description>
+			<parameter name="discovery" type="boolean">
+			<label>Enable Discovery</label>
+			<description>Enable automatic discovery</description>
+			<default>false</default>
+			</parameter>
+			</config-description>
+		-->
+	</thing-type>
+
+	<!-- Telenot Output Thing Type -->
+	<thing-type id="output">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="ipbridge"/>
+		</supported-bridge-type-refs>
+
+		<label>Telenot Reporting Area (Discovery)</label>
+		<description>Thing for Telenot all discovered reporting area (Meldebereiche)</description>
+		<!--
+			<channels>
+			<channel id="getUsedState" typeId="switch-channel"/>
+			</channels>
+		-->
 
 		<representation-property>id</representation-property>
 

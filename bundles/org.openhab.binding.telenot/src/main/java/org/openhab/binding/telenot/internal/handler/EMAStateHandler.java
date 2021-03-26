@@ -101,6 +101,11 @@ public class EMAStateHandler extends TelenotThingHandler {
     }
 
     @Override
+    public void handleUpdateChannel(TelenotMessage msg) {
+        logger.trace("handleUpdateChannel");
+    }
+
+    @Override
     public void handleUpdate(TelenotMessage msg) {
         if (!(msg instanceof EMAStateMessage)) {
             return;

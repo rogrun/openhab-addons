@@ -103,10 +103,6 @@ public class EMAStateMessage extends TelenotMessage {
             bool = true;
         }
 
-        // if (msg.substring(24, 26) == "b0" || msg.substring(24, 26) == "b2" || msg.substring(24, 26) == "b3" ) {
-        // bool = false;
-        // }
-
         try {
             address = ad;
             messagetype = parts[0];

@@ -90,6 +90,8 @@ public class IPBridgeHandler extends TelenotBridgeHandler {
             lastReceivedTime = new Date();
             connectionCheckJob = scheduler.scheduleWithFixedDelay(this::connectionCheck, config.reconnect,
                     config.reconnect, TimeUnit.MINUTES);
+            refreshSendDataJob = scheduler.scheduleWithFixedDelay(this::refreshSendData, config.refreshData,
+                    config.refreshData, TimeUnit.MINUTES);
         } catch (UnknownHostException e) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "unknown host");
             logger.debug("UnknownHostException");
@@ -122,6 +124,11 @@ public class IPBridgeHandler extends TelenotBridgeHandler {
         }
     }
 
+    protected synchronized void refreshSendData() {
+        logger.debug("Start refreshing data to eventbus");
+        refresh = true;
+    }
+
     @Override
     protected synchronized void disconnect() {
         logger.trace("Disconnecting");
@@ -137,6 +144,13 @@ public class IPBridgeHandler extends TelenotBridgeHandler {
             // use cancel(false) so we don't kill ourselves when reconnect job calls disconnect()
             ccJob.cancel(false);
             connectionCheckJob = null;
+        }
+
+        ScheduledFuture<?> rfJob = refreshSendDataJob;
+        if (rfJob != null) {
+            // use cancel(false) so we don't kill ourselves when reconnect job calls disconnect()
+            rfJob.cancel(false);
+            refreshSendDataJob = null;
         }
 
         // Must close the socket first so the message reader thread will exit properly.
