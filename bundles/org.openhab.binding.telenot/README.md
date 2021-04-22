@@ -9,14 +9,16 @@ _It is able to read the states of the contacts and the security areas._
 The binding supports the following thing types:
 
 * `ipbridge` - Supports TCP connection to the serial tcp adapter.
-* `mb` - Reports the "Meldebereiche".
+* `input` - Telenot reporting group (Discovery)
+* `output` - Telenot reporting rrea (Discovery)
+* `mb` - Reports the reporting area.
 * `mp` - Reports the inputs (contacts).
-* `sb` - Reports the security area "Sicherungsbereiche".
+* `sb` - Reports the security area.
 * `emaState` - Reports the state of the system.
 
 ## Discovery
 
-_Discovery is currently not available._
+You have to enable discovery in the ipbridge thing. After turning on the discovery will start and the switch goes to off
 
 ## Thing Configuration
 
@@ -26,6 +28,7 @@ The `ipbridge` thing supports a TCP/IP connection to an RS323 to LAN adapter.
 
 * `hostname` (required) The hostname or IP address of the serial to LAN adapter
 * `tcpPort` (default = 4116) TCP port number for the serial to LAN adapter connection
+* `discovery` Enables the discovery
 * `reconnect` (1-60, default = 2) The period in minutes that the handler will wait between connection checks and connection attempts
 * `timeout` (0-60, default = 5) The period in minutes after which the connection will be reset if no valid messages have been received. Set to 0 to disable.
 
@@ -37,6 +40,14 @@ Bridge telenot:ipbridge:device [ hostname="xxx.xxx.xxx.xxx", tcpPort=4116 ] {
   Thing ...
 }
 ```
+
+### input
+
+The `input` thing provides all channels with the state of each single reporting group.
+
+### ouput
+
+The `input` thing provides all channels with the state of each single reporting area.
 
 ### mb
 
@@ -132,6 +143,9 @@ The Telenot things expose the following channels:
 
 _Provide a full usage example based on textual configuration files (*.things, *.items, *.sitemap)._
 
+The `ipbridge` thing expose the following action to the automation engine:
+
+*setDateTime* - Send the date and time Telenot device. Accepts no parameters.
 ## Any custom content here!
 
 _Feel free to add additional sections for whatever you think should also be mentioned about your binding!_
