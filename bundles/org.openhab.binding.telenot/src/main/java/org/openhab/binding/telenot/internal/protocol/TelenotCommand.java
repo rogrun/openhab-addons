@@ -12,6 +12,8 @@
  */
 package org.openhab.binding.telenot.internal.protocol;
 
+import java.util.Calendar;
+
 import org.eclipse.jdt.annotation.NonNullByDefault;
 
 /**
@@ -44,6 +46,62 @@ public final class TelenotCommand {
 
     public static TelenotCommand reboot() {
         return new TelenotCommand(COMMAND_REBOOT, "");
+    }
+
+    public static TelenotCommand setDateTime() {
+        Calendar now = Calendar.getInstance();
+
+        int year = now.get(Calendar.YEAR) - 2000;
+        int month = now.get(Calendar.MONTH) + 1;
+        int day = now.get(Calendar.DATE);
+        int dayOfWeek = now.get(Calendar.DAY_OF_WEEK);
+        switch (dayOfWeek) {
+            case 1:
+                dayOfWeek = 6;
+                break;
+            case 2:
+                dayOfWeek = 0;
+                break;
+            case 3:
+                dayOfWeek = 1;
+                break;
+            case 4:
+                dayOfWeek = 2;
+                break;
+            case 5:
+                dayOfWeek = 3;
+                break;
+            case 6:
+                dayOfWeek = 4;
+                break;
+            case 7:
+                dayOfWeek = 5;
+                break;
+        }
+
+        int hour = now.get(Calendar.HOUR_OF_DAY);
+        int minute = now.get(Calendar.MINUTE);
+        int second = now.get(Calendar.SECOND);
+
+        String strYear = Integer.toHexString(year);
+        strYear = (strYear.length() == 1 ? "0" + strYear : strYear);
+        String strMonth = Integer.toHexString(month);
+        strMonth = (strMonth.length() == 1 ? "0" + strMonth : strMonth);
+        String strDay = Integer.toHexString(day);
+        strDay = (strDay.length() == 1 ? "0" + strDay : strDay);
+        String strDayOfWeek = Integer.toHexString(dayOfWeek);
+        strDayOfWeek = (strDayOfWeek.length() == 1 ? "0" + strDayOfWeek : strDayOfWeek);
+        String strHour = Integer.toHexString(hour);
+        strHour = (strHour.length() == 1 ? "0" + strHour : strHour);
+        String strMinute = Integer.toHexString(minute);
+        strMinute = (strMinute.length() == 1 ? "0" + strMinute : strMinute);
+        String strSecond = Integer.toHexString(second);
+        strSecond = (strSecond.length() == 1 ? "0" + strSecond : strSecond);
+
+        String msg = "680B0B6873010750" + strYear + strDayOfWeek + strMonth + strDay + strHour + strMinute + strSecond;
+        msg = msg + checksum(msg) + "16";
+
+        return new TelenotCommand(msg, "set date/time msg: " + msg);
     }
 
     /**

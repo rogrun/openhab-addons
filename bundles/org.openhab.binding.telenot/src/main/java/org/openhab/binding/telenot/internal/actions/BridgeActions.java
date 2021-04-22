@@ -66,8 +66,27 @@ public class BridgeActions implements ThingActions {
         }
     }
 
+    /**
+     * Set date/time thing action
+     */
+    @RuleAction(label = "set date/time", description = "Set's the current date and time.")
+    public void setDateTime() {
+        TelenotBridgeHandler bridge = this.bridge;
+        if (bridge != null) {
+            bridge.sendTelenotCommand(TelenotCommand.setDateTime());
+            logger.debug("Sending set date/time command.");
+        } else {
+            logger.debug("Request for set date/time action, but bridge is undefined.");
+        }
+    }
+
     // Static method for Rules DSL backward compatibility
     public static void reboot(ThingActions actions) {
         ((BridgeActions) actions).reboot();
+    }
+
+    // Static method for Rules DSL backward compatibility
+    public static void setDateTime(ThingActions actions) {
+        ((BridgeActions) actions).setDateTime();
     }
 }

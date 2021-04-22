@@ -144,7 +144,7 @@
 		</supported-bridge-type-refs>
 
 		<label>Telenot MB-Number</label>
-		<description>The number of Telenot reporting area (Meldebereiche)</description>
+		<description>The number of each single Telenot reporting area</description>
 
 		<channels>
 			<channel id="contactMB" typeId="contact-channel">
@@ -171,7 +171,7 @@
 		</supported-bridge-type-refs>
 
 		<label>Telenot reporting point address</label>
-		<description>The address of Telenot reporting point (contacts)</description>
+		<description>The address of each single Telenot reporting point</description>
 
 		<channels>
 			<channel id="contact" typeId="contact-channel"/>
@@ -197,35 +197,6 @@
 		<description>Telenot EMA State</description>
 
 		<channels>
-			<!--
-				<channel id="intArmedDatetime" typeId="datetime-channel">
-				<label>Internally Armed Date/Time</label>
-				</channel>
-				<channel id="intArmedContact" typeId="text-channel">
-				<label>Internally Armed Contact</label>
-				</channel>
-				<channel id="extArmedDatetime" typeId="datetime-channel">
-				<label>Externally Armed Date/Time</label>
-				</channel>
-				<channel id="extArmedContact" typeId="text-channel">
-				<label>Externally Armed Contact</label>
-				</channel>
-				<channel id="disarmedDatetime" typeId="datetime-channel">
-				<label>Disarmed Date/Time</label>
-				</channel>
-				<channel id="disarmedContact" typeId="text-channel">
-				<label>Disarmed Contact</label>
-				</channel>
-				<channel id="alarmDatetime" typeId="datetime-channel">
-				<label>Alarm Date/Time</label>
-				</channel>
-				<channel id="alarmContact" typeId="text-channel">
-				<label>Alarm Contact</label>
-				</channel>
-				<channel id="alarmSetClear" typeId="indicator-channel">
-				<label>Alarm Set/Clear</label>
-				</channel>
-			-->
 			<channel id="intrusionDatetime" typeId="datetime-channel">
 				<label>Intrusion Date/Time</label>
 			</channel>
@@ -295,22 +266,7 @@
 		<label>Telenot Reporting Group (Discovery)</label>
 		<description>Thing for Telenot all discovered reporting group (Meldegruppen)</description>
 
-		<!--
-			<channels>
-			<channel id="getUsedState" typeId="switch-channel"/>
-			</channels>
-		-->
-
 		<representation-property>id</representation-property>
-		<!--
-			<config-description>
-			<parameter name="discovery" type="boolean">
-			<label>Enable Discovery</label>
-			<description>Enable automatic discovery</description>
-			<default>false</default>
-			</parameter>
-			</config-description>
-		-->
 	</thing-type>
 
 	<!-- Telenot Output Thing Type -->
@@ -320,17 +276,11 @@
 		</supported-bridge-type-refs>
 
 		<label>Telenot Reporting Area (Discovery)</label>
-		<description>Thing for Telenot all discovered reporting area (Meldebereiche)</description>
-		<!--
-			<channels>
-			<channel id="getUsedState" typeId="switch-channel"/>
-			</channels>
-		-->
+		<description>Thing for Telenot all discovered reporting area</description>
 
 		<representation-property>id</representation-property>
 
 	</thing-type>
-
 
 	<!-- ===== Channel Type Definitions ===== -->
 

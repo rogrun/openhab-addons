@@ -47,6 +47,8 @@ public class TelenotBindingConstants {
     public static final ChannelTypeUID CHANNEL_TYPE_CONTACT = new ChannelTypeUID(BINDING_ID, "contact-channel");
     public static final ChannelTypeUID CHANNEL_TYPE_SWITCH = new ChannelTypeUID(BINDING_ID, "switch-channel");
 
+    // public static final String CHANNEL_SET_DATE_TIME = "setDateTime";
+
     // Channel request used contacts
     public static final String GET_USED_STATE = "getUsedState";
     public static final String CHANNEL_MG = "mg";

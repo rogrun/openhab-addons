@@ -36,8 +36,6 @@ public class EMAStateHandler extends TelenotThingHandler {
 
     private final Logger logger = LoggerFactory.getLogger(EMAStateHandler.class);
 
-    // private SBConfig config = new SBConfig();
-
     public EMAStateHandler(Thing thing) {
         super(thing);
     }
@@ -49,17 +47,6 @@ public class EMAStateHandler extends TelenotThingHandler {
 
     @Override
     public void initialize() {
-        // config = getConfigAs(SBConfig.class);
-
-        // if (config.address < 0) {
-        // updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Invalid address setting");
-        // return;
-        // }
-        // logger.debug("SB handler initializing for address {}", config.address);
-
-        // String id = mpID(config.address);
-        // updateProperty(PROPERTY_ID, id); // set representation property used by discovery
-
         initDeviceState();
         logger.trace("emaState handler finished initializing");
     }
