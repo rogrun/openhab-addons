@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<thing:thing-descriptions bindingId="aquatemp"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:thing="https://openhab.org/schemas/thing-description/v1.0.0"
+	xsi:schemaLocation="https://openhab.org/schemas/thing-description/v1.0.0 https://openhab.org/schemas/thing-description-1.0.0.xsd">
+
+	<bridge-type id="bridge">
+		<label>AquaTemp Connect Bridge</label>
+		<description>The bridge to communicate with the AquaTemp API</description>
+		<channels>
+			<channel id="countApiCalls" typeId="type-number">
+				<label>Count API Calls</label>
+			</channel>
+			<channel id="runQueryOnce" typeId="runQueryOnce">
+				<label>Run device query once</label>
+			</channel>
+		</channels>
+		<properties>
+			<property name="thingTypeVersion">3</property>
+		</properties>
+		<config-description>
+			<parameter name="user" type="text" required="true">
+				<label>E-Mail address</label>
+				<description>The E-Mail address for which the application key has been issued</description>
+			</parameter>
+			<parameter name="password" type="text" required="true">
+				<label>Password</label>
+				<description>The password for the given E-Mail address</description>
+				<context>password</context>
+			</parameter>
+			<parameter name="disablePolling" type="boolean" required="false">
+				<label>Disable polling</label>
+				<description>Deactivates the polling to carry out the manual poll using an item</description>
+				<default>false</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="apiCallLimit" type="integer" required="false">
+				<label>API call limit</label>
+				<description>The limit how often call the API. For calculating the time how often the data is queried in
+					seconds</description>
+				<default>1450</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="bufferApiCommands" type="integer" required="false">
+				<label>Buffer for API commands</label>
+				<description>The buffer for commands. For calculating the time how often the data is queried in seconds</description>
+				<default>450</default>
+				<advanced>true</advanced>
+			</parameter>
+			<parameter name="pollingInterval" type="integer" required="false" unit="s">
+				<label>Polling Interval</label>
+				<default>0</default>
+				<description>How often the heating should be queried in seconds (If it's set to 0, then the interval will
+					be
+					calculated by the binding)</description>
+				<advanced>true</advanced>
+			</parameter>
+		</config-description>
+	</bridge-type>
+
+	<!-- AquaTemp Device Thing Type -->
+	<thing-type id="device">
+		<supported-bridge-type-refs>
+			<bridge-type-ref id="bridge"/>
+		</supported-bridge-type-refs>
+		<label>AquaTemp Device</label>
+		<channels>
+			<channel id="powerState" typeId="type-boolean">
+				<label>Power Switch</label>
+			</channel>
+			<channel id="inletTemperature" typeId="type-temperature">
+				<label>Inlet temperature</label>
+			</channel>
+			<channel id="outletTemperature" typeId="type-temperature">
+				<label>Outlet temperature</label>
+			</channel>
+			<channel id="ambientTemperature" typeId="type-temperature">
+				<label>Ambient temperature</label>
+			</channel>
+			<channel id="targetTemperature" typeId="type-settemperature">
+				<label>Target temperature</label>
+			</channel>
+			<channel id="silentMode" typeId="type-boolean">
+				<label>Silent Mode</label>
+			</channel>
+			<channel id="mode" typeId="type-mode">
+				<label>Mode</label>
+			</channel>
+			<channel id="consumption" typeId="type-power">
+				<label>Consumption</label>
+			</channel>
+			<channel id="errorMessage" typeId="type-string-readOnly">
+				<label>Error message</label>
+			</channel>
+			<channel id="errorIsActive" typeId="type-boolean-readOnly">
+				<label>Error is active</label>
+			</channel>
+		</channels>
+		<properties>
+			<property name="thingTypeVersion">1</property>
+		</properties>
+		<representation-property>deviceId</representation-property>
+		<config-description>
+			<parameter name="deviceId" type="text" required="true">
+				<label>Device Id</label>
+				<default>0</default>
+			</parameter>
+		</config-description>
+	</thing-type>
+
+	<!-- Channel Types -->
+	<channel-type id="type-temperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Temperature</label>
+		<category>Temperature</category>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="type-settemperature">
+		<item-type>Number:Temperature</item-type>
+		<label>Set temperature</label>
+		<category>Temperature</category>
+		<state min="15" max="35" step="1" pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+
+	<channel-type id="type-power">
+		<item-type>Number:Power</item-type>
+		<label>Power</label>
+		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="type-number">
+		<item-type>Number</item-type>
+		<label>Number</label>
+		<category>Number</category>
+		<state pattern="%d %unit%" readOnly="false"/>
+	</channel-type>
+
+	<channel-type id="type-mode">
+		<item-type>Number</item-type>
+		<label>Mode</label>
+		<category>Number</category>
+		<state readOnly="false">
+			<options>
+				<option value="0">Cooling</option>
+				<option value="1">Heating</option>
+				<option value="2">Auto</option>
+			</options>
+		</state>
+	</channel-type>
+
+	<channel-type id="type-string-readOnly">
+		<item-type>String</item-type>
+		<label>String</label>
+		<category>Text</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="type-boolean">
+		<item-type>Switch</item-type>
+		<label>Switch</label>
+		<category>Switch</category>
+	</channel-type>
+
+	<channel-type id="type-boolean-readOnly">
+		<item-type>Switch</item-type>
+		<label>Switch</label>
+		<category>Switch</category>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="runQueryOnce" advanced="true">
+		<item-type>Switch</item-type>
+		<label>Run device query once</label>
+		<category>Switch</category>
+	</channel-type>
+
+	<channel-type id="errorIsActive">
+		<item-type>Switch</item-type>
+		<label>Error is active</label>
+		<category>Error</category>
+	</channel-type>
+
+</thing:thing-descriptions>
