@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -75,6 +74,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
     protected @Nullable AquatempDiscoveryService discoveryService;
 
     private int apiCalls;
+    private int pollingInterval = 90;
     private boolean countReset = true;
 
     private @Nullable ScheduledFuture<?> aquatempBridgePollingJob;
@@ -135,8 +135,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
     public void initialize() {
         logger.debug("Initialize Aquatemp Accountservice");
 
-        BridgeConfiguration config = getConfigAs(BridgeConfiguration.class);
-        this.config = config;
+        this.config = getConfigAs(BridgeConfiguration.class);
         String storedApiCalls = this.stateStorage.get(STORED_API_CALLS);
         if (storedApiCalls != null) {
             apiCalls = Integer.parseInt(storedApiCalls);
@@ -209,7 +208,14 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
         if (this.config.pollingInterval > 0) {
             return this.config.pollingInterval;
         } else {
-            return (86400 / (this.config.apiCallLimit - this.config.bufferApiCommands) * devicesList.size()) + 1;
+
+            int calculatedInterval = (86400 / (this.config.apiCallLimit - this.config.bufferApiCommands)
+                    * getAllActiveDevices()) + 1;
+
+            if (calculatedInterval < 60) {
+                calculatedInterval = 60;
+            }
+            return calculatedInterval;
         }
     }
 
@@ -235,7 +241,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
 
     private void pollingDevices() {
         getAllDevices();
-        List<Thing> children = getThing().getThings().stream().filter(Thing::isEnabled).collect(Collectors.toList());
+        List<Thing> children = getThing().getThings().stream().filter(Thing::isEnabled).toList();
         for (Thing child : children) {
             ThingHandler childHandler = child.getHandler();
             if (childHandler instanceof DeviceHandler && ThingHandlerHelper.isHandlerInitialized(childHandler)) {
@@ -245,6 +251,18 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
                 checkDeviceStatus((DeviceHandler) childHandler);
             }
         }
+    }
+
+    private Integer getAllActiveDevices() {
+        Integer activeDevices = 0;
+        List<Thing> bridgeChildren = getThing().getThings().stream().filter(Thing::isEnabled).toList();
+        for (Thing bridgeChild : bridgeChildren) {
+            ThingHandler childHandler = bridgeChild.getHandler();
+            if (childHandler instanceof DeviceHandler) {
+                activeDevices++;
+            }
+        }
+        return activeDevices;
     }
 
     public void updateAllDataOfDevice(DeviceHandler handler) {
@@ -306,6 +324,11 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
                     logger.debug("Refresh job scheduled to run every {} seconds for '{}'", pollingIntervalS,
                             getThing().getUID());
                     pollingDevices();
+                    int newPollingInterval = getPollingInterval();
+                    if (newPollingInterval != pollingInterval) {
+                        pollingInterval = newPollingInterval;
+                        updateBridgePollingInterval();
+                    }
                 }
             }, initialDelay, pollingIntervalS, TimeUnit.SECONDS);
         }
@@ -317,6 +340,12 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
             currentPollingJob.cancel(true);
             aquatempBridgePollingJob = null;
         }
+    }
+
+    private void updateBridgePollingInterval() {
+        updateProperty("pollingInterval [s]", String.valueOf(pollingInterval));
+        stopAquatempBridgePolling();
+        startAquatempBridgePolling(pollingInterval, pollingInterval);
     }
 
     public void updateBridgeStatus(ThingStatus status) {

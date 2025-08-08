@@ -23,23 +23,25 @@ import java.util.concurrent.TimeUnit;
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.aquatemp.internal.handler.AquatempBridgeHandler;
-import org.openhab.core.config.discovery.AbstractDiscoveryService;
+import org.openhab.core.config.discovery.AbstractThingHandlerDiscoveryService;
 import org.openhab.core.config.discovery.DiscoveryResult;
 import org.openhab.core.config.discovery.DiscoveryResultBuilder;
 import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.ThingUID;
 import org.openhab.core.thing.binding.ThingHandler;
-import org.openhab.core.thing.binding.ThingHandlerService;
+import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.ServiceScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The {@link aquatempDiscoveryService} handles discovery of devices as they are identified by the bridge handler.
+ * The {@link AquatempDiscoveryService} handles discovery of devices as they are identified by the bridge handler.
  *
  * @author Ronny Grun - Initial contribution
  */
+@Component(scope = ServiceScope.PROTOTYPE, service = AquatempDiscoveryService.class)
 @NonNullByDefault
-public class AquatempDiscoveryService extends AbstractDiscoveryService implements ThingHandlerService {
+public class AquatempDiscoveryService extends AbstractThingHandlerDiscoveryService<AquatempBridgeHandler> {
 
     private final Logger logger = LoggerFactory.getLogger(AquatempDiscoveryService.class);
 
@@ -48,7 +50,7 @@ public class AquatempDiscoveryService extends AbstractDiscoveryService implement
     private @Nullable ThingUID bridgeUID;
 
     public AquatempDiscoveryService() {
-        super(DISCOVERABLE_DEVICE_TYPE_UIDS, 30, true);
+        super(AquatempBridgeHandler.class, DISCOVERABLE_DEVICE_TYPE_UIDS, 30, true);
     }
 
     @Override

@@ -13,12 +13,9 @@
 package org.openhab.binding.aquatemp.internal;
 
 import java.net.URI;
-import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
-import org.openhab.core.library.unit.SIUnits;
-import org.openhab.core.library.unit.Units;
 import org.openhab.core.thing.ThingTypeUID;
 
 /**
@@ -30,7 +27,7 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class AquatempBindingConstants {
     public static final String BINDING_ID = "aquatemp";
-    public static final String BINDING_NAME = "AquaTemp Binding";
+    // public static final String BINDING_NAME = "AquaTemp Binding";
 
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
@@ -47,11 +44,13 @@ public class AquatempBindingConstants {
 
     public static final URI AQUATEMP_URI = URI.create("http://cloud.linked-go.com");
 
-    public static final int REFRESH_TOKEN_EXPIRE = 15552000;
+    // public static final int REFRESH_TOKEN_EXPIRE = 15552000;
 
     public static final int API_TIMEOUT_MS = 20000;
     public static final String PROPERTY_ID = "deviceId";
 
+    //@formatter:off
+    /*
     public static final Map<String, String> UNIT_MAP = Map.of( //
             "celsius", SIUnits.CELSIUS.getSymbol(), //
             "kelvin", Units.KELVIN.toString(), //
@@ -62,6 +61,8 @@ public class AquatempBindingConstants {
             "hours", Units.HOUR.toString(), //
             "liter", Units.LITRE.toString(), //
             "cubicMeter", SIUnits.CUBIC_METRE.toString());
+     */
+    //@formatter:on
 
     public static final String CHANNEL_RUN_QUERY_ONCE = "runQueryOnce";
 }
