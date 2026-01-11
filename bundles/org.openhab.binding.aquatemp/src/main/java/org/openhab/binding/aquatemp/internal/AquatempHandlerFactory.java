@@ -22,6 +22,7 @@ import org.eclipse.jetty.client.HttpClient;
 import org.openhab.binding.aquatemp.internal.handler.AquatempBridgeHandler;
 import org.openhab.binding.aquatemp.internal.handler.DeviceHandler;
 import org.openhab.core.io.net.http.HttpClientFactory;
+import org.openhab.core.items.ManagedItemProvider;
 import org.openhab.core.storage.Storage;
 import org.openhab.core.storage.StorageService;
 import org.openhab.core.thing.Bridge;
@@ -30,6 +31,7 @@ import org.openhab.core.thing.ThingTypeUID;
 import org.openhab.core.thing.binding.BaseThingHandlerFactory;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
+import org.openhab.core.thing.link.ItemChannelLinkRegistry;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
 import org.osgi.service.component.annotations.Reference;
@@ -46,14 +48,19 @@ public class AquatempHandlerFactory extends BaseThingHandlerFactory {
 
     private final HttpClient httpClient;
     private final StorageService storageService;
+    private final ItemChannelLinkRegistry linkRegistry;
+    private final ManagedItemProvider managedItemProvider;
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_BRIDGE, THING_TYPE_DEVICE);
 
     @Activate
-    public AquatempHandlerFactory(@Reference HttpClientFactory httpClientFactory,
-            @Reference StorageService storageService) {
+    public AquatempHandlerFactory(final @Reference HttpClientFactory httpClientFactory,
+            final @Reference StorageService storageService, final @Reference ItemChannelLinkRegistry linkRegistry,
+            final @Reference ManagedItemProvider managedItemProvider) {
         this.httpClient = httpClientFactory.getCommonHttpClient();
         this.storageService = storageService;
+        this.linkRegistry = linkRegistry;
+        this.managedItemProvider = managedItemProvider;
     }
 
     @Override
@@ -68,9 +75,9 @@ public class AquatempHandlerFactory extends BaseThingHandlerFactory {
         if (THING_TYPE_BRIDGE.equals(thingTypeUID)) {
             Storage<String> storage = storageService.getStorage(thing.getUID().toString(),
                     String.class.getClassLoader());
-            return new AquatempBridgeHandler((Bridge) thing, storage, httpClient);
+            return new AquatempBridgeHandler((Bridge) thing, storage, httpClient, linkRegistry);
         } else if (THING_TYPE_DEVICE.equals(thingTypeUID)) {
-            return new DeviceHandler(thing);
+            return new DeviceHandler(thing, linkRegistry, managedItemProvider);
         }
         return null;
     }

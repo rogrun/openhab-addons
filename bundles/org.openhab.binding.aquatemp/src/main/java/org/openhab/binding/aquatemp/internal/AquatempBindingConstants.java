@@ -27,15 +27,17 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class AquatempBindingConstants {
     public static final String BINDING_ID = "aquatemp";
-    // public static final String BINDING_NAME = "AquaTemp Binding";
 
     // List of all Thing Type UIDs
     public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
     public static final ThingTypeUID THING_TYPE_DEVICE = new ThingTypeUID(BINDING_ID, "device");
 
+    public static final int DEVICE_THING_TYPE_VERSION = 2;
+    public static final int BRIDGE_THING_TYPE_VERSION = 4;
+
     public static final Set<ThingTypeUID> DISCOVERABLE_DEVICE_TYPE_UIDS = Set.of(THING_TYPE_DEVICE);
 
-    public static final String COUNT_API_CALLS = "countApiCalls";
+    public static final String COUNT_API_CALLS = "count-api-calls";
 
     // References for needed API identifiers
     public static final String AQUATEMP_BASE_URL = "https://cloud.linked-go.com/cloudservice/api";
@@ -44,25 +46,8 @@ public class AquatempBindingConstants {
 
     public static final URI AQUATEMP_URI = URI.create("http://cloud.linked-go.com");
 
-    // public static final int REFRESH_TOKEN_EXPIRE = 15552000;
-
     public static final int API_TIMEOUT_MS = 20000;
     public static final String PROPERTY_ID = "deviceId";
 
-    //@formatter:off
-    /*
-    public static final Map<String, String> UNIT_MAP = Map.of( //
-            "celsius", SIUnits.CELSIUS.getSymbol(), //
-            "kelvin", Units.KELVIN.toString(), //
-            "kilowattHour", Units.KILOWATT_HOUR.toString(), //
-            "percent", Units.PERCENT.toString(), //
-            "minute", Units.MINUTE.toString(), //
-            "hour", Units.HOUR.toString(), //
-            "hours", Units.HOUR.toString(), //
-            "liter", Units.LITRE.toString(), //
-            "cubicMeter", SIUnits.CUBIC_METRE.toString());
-     */
-    //@formatter:on
-
-    public static final String CHANNEL_RUN_QUERY_ONCE = "runQueryOnce";
+    public static final String CHANNEL_RUN_QUERY_ONCE = "run-query-once";
 }

@@ -18,8 +18,10 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -36,10 +38,12 @@ import org.openhab.binding.aquatemp.internal.dto.device.DataObjectResult;
 import org.openhab.binding.aquatemp.internal.dto.device.DeviceDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.ObjectResult;
+import org.openhab.binding.aquatemp.internal.util.AquatempUtil;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.storage.Storage;
 import org.openhab.core.thing.Bridge;
+import org.openhab.core.thing.Channel;
 import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
@@ -47,6 +51,10 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.openhab.core.thing.binding.BaseBridgeHandler;
 import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerService;
+import org.openhab.core.thing.binding.builder.ChannelBuilder;
+import org.openhab.core.thing.link.ItemChannelLink;
+import org.openhab.core.thing.link.ItemChannelLinkRegistry;
+import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.thing.util.ThingHandlerHelper;
 import org.openhab.core.types.Command;
 import org.slf4j.Logger;
@@ -79,6 +87,9 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
 
     private @Nullable ScheduledFuture<?> aquatempBridgePollingJob;
 
+    private @Nullable ScheduledFuture<?> initJob;
+    private volatile boolean disposed = false;
+
     public @Nullable List<ObjectResult> devicesData;
 
     private DeviceDTO allDevices = new DeviceDTO();
@@ -87,10 +98,14 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
 
     private BridgeConfiguration config = new BridgeConfiguration();
 
-    public AquatempBridgeHandler(Bridge bridge, Storage<String> stateStorage, HttpClient httpClient) {
+    private final ItemChannelLinkRegistry linkRegistry;
+
+    public AquatempBridgeHandler(Bridge bridge, Storage<String> stateStorage, HttpClient httpClient,
+            ItemChannelLinkRegistry linkRegistry) {
         super(bridge);
         this.stateStorage = stateStorage;
         this.httpClient = httpClient;
+        this.linkRegistry = linkRegistry;
     }
 
     /**
@@ -123,6 +138,14 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
 
     @Override
     public void dispose() {
+        disposed = true;
+
+        ScheduledFuture<?> currentInitJob = initJob;
+        if (currentInitJob != null) {
+            currentInitJob.cancel(true);
+            initJob = null;
+        }
+
         stopAquatempBridgePolling();
     }
 
@@ -142,13 +165,95 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
         } else {
             apiCalls = 0;
         }
+        disposed = false;
+
+        int thingTypeVersion = AquatempUtil.getThingTypeVersion(thing);
+        if (thingTypeVersion < BRIDGE_THING_TYPE_VERSION) {
+            migrateChannelIds();
+        }
 
         api = new AquatempApi(this, httpClient, this.config.user, this.config.password);
-        getAllDevices();
-        if (!devicesList.isEmpty()) {
-            updateBridgeStatus(ThingStatus.ONLINE);
-            startAquatempBridgePolling(getPollingInterval(), 1);
+        initJob = scheduler.schedule(() -> {
+            if (disposed) {
+                return;
+            }
+            try {
+                getAllDevices();
+                if (!devicesList.isEmpty()) {
+                    updateBridgeStatus(ThingStatus.ONLINE);
+                    startAquatempBridgePolling(getPollingInterval(), 1);
+                }
+            } catch (Exception e) {
+                if (!disposed) {
+                    updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+                }
+            }
+        }, 0, TimeUnit.SECONDS);
+    }
+
+    private void migrateChannelIds() {
+        List<Channel> oldChannels = thing.getChannels();
+        List<Channel> newChannels = new ArrayList<>(oldChannels.size());
+
+        Map<ChannelUID, ChannelUID> renameMap = new LinkedHashMap<>();
+
+        for (Channel channel : oldChannels) {
+            String oldId = channel.getUID().getId();
+            String newId = AquatempUtil.camelToHyphen(oldId);
+            boolean updateChannelType = false;
+            String channelLabel = channel.getLabel();
+            String channelType = AquatempUtil
+                    .camelToHyphen(Objects.requireNonNull(channel.getChannelTypeUID()).toString());
+            channelType = channelType.replace(BINDING_ID + ":", "");
+
+            if (channelType.contains("type-")) {
+                channelType = channelType.replace("type-", "");
+                updateChannelType = true;
+            }
+
+            if (!newId.equals(oldId) || updateChannelType) {
+                logger.info("Migrating channel '{}' -> '{}'", oldId, newId);
+
+                ChannelUID oldUid = channel.getUID();
+                ChannelUID newUid = new ChannelUID(thing.getUID(), newId);
+
+                ChannelTypeUID channelTypeUID = new ChannelTypeUID(BINDING_ID, channelType);
+                if (channelLabel != null) {
+                    Channel newChannel = ChannelBuilder.create(newUid, channel.getAcceptedItemType())
+                            .withLabel(channelLabel).withType(channelTypeUID).withProperties(channel.getProperties())
+                            .build();
+
+                    newChannels.add(newChannel);
+                    renameMap.put(oldUid, newUid);
+                }
+            }
         }
+
+        if (renameMap.isEmpty()) {
+            return;
+        }
+
+        updateThing(editThing().withChannels(newChannels).build());
+
+        for (Map.Entry<ChannelUID, ChannelUID> e : renameMap.entrySet()) {
+            ChannelUID oldUid = e.getKey();
+            ChannelUID newUid = e.getValue();
+
+            Collection<ItemChannelLink> links = new ArrayList<>(linkRegistry.getLinks(oldUid));
+
+            for (ItemChannelLink link : links) {
+                String item = link.getItemName();
+                try {
+                    linkRegistry.remove(link.getUID());
+                } catch (Exception ex) {
+                    logger.warn("Could not remove old link {} -> {}: {}", item, oldUid, ex.getMessage());
+                }
+
+                linkRegistry.add(new ItemChannelLink(item, newUid));
+                logger.info("Re-linked item '{}' from '{}' to '{}'", item, oldUid.getId(), newUid.getId());
+            }
+        }
+        updateProperty("thingTypeVersion", Integer.toString(BRIDGE_THING_TYPE_VERSION));
     }
 
     public void getAllDevices() {

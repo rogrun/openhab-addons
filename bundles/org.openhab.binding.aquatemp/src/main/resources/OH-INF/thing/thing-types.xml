@@ -8,20 +8,21 @@
 		<label>AquaTemp Connect Bridge</label>
 		<description>The bridge to communicate with the AquaTemp API</description>
 		<channels>
-			<channel id="countApiCalls" typeId="type-number">
+			<channel id="count-api-calls" typeId="number">
 				<label>Count API Calls</label>
 			</channel>
-			<channel id="runQueryOnce" typeId="runQueryOnce">
-				<label>Run device query once</label>
+			<channel id="run-query-once" typeId="run-query-once">
+				<label>Run Device Query</label>
 			</channel>
 		</channels>
 		<properties>
-			<property name="thingTypeVersion">3</property>
+			<property name="thingTypeVersion">4</property>
 		</properties>
 		<config-description>
 			<parameter name="user" type="text" required="true">
 				<label>E-Mail address</label>
 				<description>The E-Mail address for which the application key has been issued</description>
+				<context>email</context>
 			</parameter>
 			<parameter name="password" type="text" required="true">
 				<label>Password</label>
@@ -65,39 +66,39 @@
 		</supported-bridge-type-refs>
 		<label>AquaTemp Device</label>
 		<channels>
-			<channel id="powerState" typeId="type-boolean">
+			<channel id="power-state" typeId="boolean">
 				<label>Power Switch</label>
 			</channel>
-			<channel id="inletTemperature" typeId="type-temperature">
+			<channel id="inlet-temperature" typeId="temperature">
 				<label>Inlet temperature</label>
 			</channel>
-			<channel id="outletTemperature" typeId="type-temperature">
+			<channel id="outlet-temperature" typeId="temperature">
 				<label>Outlet temperature</label>
 			</channel>
-			<channel id="ambientTemperature" typeId="type-temperature">
+			<channel id="ambient-temperature" typeId="temperature">
 				<label>Ambient temperature</label>
 			</channel>
-			<channel id="targetTemperature" typeId="type-settemperature">
+			<channel id="target-temperature" typeId="set-temperature">
 				<label>Target temperature</label>
 			</channel>
-			<channel id="silentMode" typeId="type-boolean">
+			<channel id="silent-mode" typeId="boolean">
 				<label>Silent Mode</label>
 			</channel>
-			<channel id="mode" typeId="type-mode">
+			<channel id="mode" typeId="mode">
 				<label>Mode</label>
 			</channel>
-			<channel id="consumption" typeId="type-power">
+			<channel id="consumption" typeId="power">
 				<label>Consumption</label>
 			</channel>
-			<channel id="errorMessage" typeId="type-string-readOnly">
+			<channel id="error-message" typeId="string-read-only">
 				<label>Error message</label>
 			</channel>
-			<channel id="errorIsActive" typeId="type-boolean-readOnly">
+			<channel id="error-is-active" typeId="boolean-read-only">
 				<label>Error is active</label>
 			</channel>
 		</channels>
 		<properties>
-			<property name="thingTypeVersion">1</property>
+			<property name="thingTypeVersion">2</property>
 		</properties>
 		<representation-property>deviceId</representation-property>
 		<config-description>
@@ -109,37 +110,54 @@
 	</thing-type>
 
 	<!-- Channel Types -->
-	<channel-type id="type-temperature">
+	<channel-type id="temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Temperature</label>
 		<category>Temperature</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Temperature</tag>
+		</tags>
 		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
 
-	<channel-type id="type-settemperature">
+	<channel-type id="set-temperature">
 		<item-type>Number:Temperature</item-type>
 		<label>Set temperature</label>
 		<category>Temperature</category>
+		<tags>
+			<tag>Setpoint</tag>
+			<tag>Temperature</tag>
+		</tags>
 		<state min="15" max="35" step="1" pattern="%d %unit%" readOnly="false"/>
 	</channel-type>
 
-	<channel-type id="type-power">
+	<channel-type id="power">
 		<item-type>Number:Power</item-type>
 		<label>Power</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Power</tag>
+		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
 	</channel-type>
 
-	<channel-type id="type-number">
+	<channel-type id="number">
 		<item-type>Number</item-type>
 		<label>Number</label>
 		<category>Number</category>
 		<state pattern="%d %unit%" readOnly="false"/>
 	</channel-type>
 
-	<channel-type id="type-mode">
-		<item-type>Number</item-type>
+	<channel-type id="mode">
+		<item-type>String</item-type>
 		<label>Mode</label>
-		<category>Number</category>
+		<category>Heating</category>
+		<tags>
+			<tag>Control</tag>
+			<tag>Mode</tag>
+		</tags>
 		<state readOnly="false">
 			<options>
 				<option value="0">Cooling</option>
@@ -149,36 +167,41 @@
 		</state>
 	</channel-type>
 
-	<channel-type id="type-string-readOnly">
+	<channel-type id="string-read-only">
 		<item-type>String</item-type>
 		<label>String</label>
 		<category>Text</category>
 		<state readOnly="true"/>
 	</channel-type>
 
-	<channel-type id="type-boolean">
+	<channel-type id="boolean">
 		<item-type>Switch</item-type>
 		<label>Switch</label>
 		<category>Switch</category>
 	</channel-type>
 
-	<channel-type id="type-boolean-readOnly">
+	<channel-type id="boolean-read-only">
 		<item-type>Switch</item-type>
 		<label>Switch</label>
 		<category>Switch</category>
 		<state readOnly="true"/>
 	</channel-type>
 
-	<channel-type id="runQueryOnce" advanced="true">
+	<channel-type id="run-query-once" advanced="true">
 		<item-type>Switch</item-type>
 		<label>Run device query once</label>
 		<category>Switch</category>
 	</channel-type>
 
-	<channel-type id="errorIsActive">
+	<channel-type id="error-is-active">
 		<item-type>Switch</item-type>
 		<label>Error is active</label>
 		<category>Error</category>
+		<tags>
+			<tag>Status</tag>
+			<tag>Info</tag>
+		</tags>
+		<state readOnly="true"/>
 	</channel-type>
 
 </thing:thing-descriptions>

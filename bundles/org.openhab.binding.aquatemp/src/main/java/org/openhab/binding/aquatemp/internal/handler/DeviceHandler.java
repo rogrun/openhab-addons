@@ -14,6 +14,12 @@ package org.openhab.binding.aquatemp.internal.handler;
 
 import static org.openhab.binding.aquatemp.internal.AquatempBindingConstants.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -25,6 +31,10 @@ import org.openhab.binding.aquatemp.internal.dto.device.DataDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.DataObjectResult;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorObjectResult;
+import org.openhab.binding.aquatemp.internal.dto.device.ParamDTO;
+import org.openhab.binding.aquatemp.internal.dto.device.ParamRequest;
+import org.openhab.binding.aquatemp.internal.util.AquatempUtil;
+import org.openhab.core.items.ManagedItemProvider;
 import org.openhab.core.library.types.DecimalType;
 import org.openhab.core.library.types.OnOffType;
 import org.openhab.core.library.types.QuantityType;
@@ -37,9 +47,15 @@ import org.openhab.core.thing.ChannelUID;
 import org.openhab.core.thing.Thing;
 import org.openhab.core.thing.ThingStatus;
 import org.openhab.core.thing.ThingStatusDetail;
+import org.openhab.core.thing.binding.builder.ChannelBuilder;
+import org.openhab.core.thing.link.ItemChannelLink;
+import org.openhab.core.thing.link.ItemChannelLinkRegistry;
+import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
 
 /**
  * The {@link DeviceHandler} is responsible for handling DeviceHandler
@@ -54,8 +70,13 @@ public class DeviceHandler extends AquatempThingHandler {
 
     private ThingsConfig config = new ThingsConfig();
 
-    public DeviceHandler(Thing thing) {
+    private final ItemChannelLinkRegistry linkRegistry;
+    private final ManagedItemProvider managedItemProvider;
+
+    public DeviceHandler(Thing thing, ItemChannelLinkRegistry linkRegistry, ManagedItemProvider managedItemProvider) {
         super(thing);
+        this.linkRegistry = linkRegistry;
+        this.managedItemProvider = managedItemProvider;
     }
 
     @Override
@@ -68,8 +89,101 @@ public class DeviceHandler extends AquatempThingHandler {
         }
         updateProperty(PROPERTY_ID, config.deviceId); // set representation property used by discovery
 
+        int thingTypeVersion = AquatempUtil.getThingTypeVersion(thing);
+        if (thingTypeVersion < DEVICE_THING_TYPE_VERSION) {
+            migrateChannelIds();
+        }
+
         initDeviceState();
         logger.trace("Device handler finished initializing");
+    }
+
+    private void migrateChannelIds() {
+        List<Channel> oldChannels = thing.getChannels();
+        List<Channel> newChannels = new ArrayList<>(oldChannels.size());
+
+        Map<ChannelUID, ChannelUID> renameMap = new LinkedHashMap<>();
+
+        for (Channel channel : oldChannels) {
+            String oldId = channel.getUID().getId();
+            String newId = AquatempUtil.camelToHyphen(oldId);
+            boolean updateChannelType = false;
+            String channelLabel = channel.getLabel();
+            String oldChannelType = AquatempUtil
+                    .camelToHyphen(Objects.requireNonNull(channel.getChannelTypeUID()).toString());
+            oldChannelType = oldChannelType.replace(BINDING_ID + ":", "");
+            String newChannelType = oldChannelType;
+
+            if ("type-settemperature".equals(oldChannelType) || "settemperature".equals(oldChannelType)) {
+                newChannelType = "set-temperature";
+                updateChannelType = true;
+            }
+
+            if (oldChannelType.contains("type-")) {
+                newChannelType = newChannelType.replace("type-", "");
+                updateChannelType = true;
+            }
+
+            if (oldChannelType.contains("type-string-readOnly")) {
+                newChannelType = "string-read-only";
+                updateChannelType = true;
+            }
+
+            if (oldChannelType.contains("type-boolean-readOnly")) {
+                newChannelType = "boolean-read-only";
+                updateChannelType = true;
+            }
+
+            if (!newId.equals(oldId) || updateChannelType) {
+                logger.info("Migrating channel '{}' -> '{}' | channel-type  '{}' -> '{}'", oldId, newId, oldChannelType,
+                        newChannelType);
+
+                ChannelUID oldUid = channel.getUID();
+                ChannelUID newUid = new ChannelUID(thing.getUID(), newId);
+                String channelDescription = channel.getDescription();
+                if (channelDescription == null) {
+                    channelDescription = "";
+                }
+
+                ChannelTypeUID channelTypeUID = new ChannelTypeUID(BINDING_ID, newChannelType);
+                if (channelLabel != null) {
+                    Channel newChannel = ChannelBuilder.create(newUid, channel.getAcceptedItemType())
+                            .withLabel(channelLabel).withDescription(channelDescription).withType(channelTypeUID)
+                            .withProperties(channel.getProperties()).build();
+
+                    newChannels.add(newChannel);
+                    renameMap.put(oldUid, newUid);
+                }
+            }
+        }
+
+        if (renameMap.isEmpty()) {
+            return;
+        }
+
+        updateThing(editThing().withChannels(newChannels).build());
+
+        for (Map.Entry<ChannelUID, ChannelUID> e : renameMap.entrySet()) {
+            ChannelUID oldUid = e.getKey();
+            ChannelUID newUid = e.getValue();
+
+            Collection<ItemChannelLink> links = new ArrayList<>(linkRegistry.getLinks(oldUid));
+
+            for (ItemChannelLink link : links) {
+                String item = link.getItemName();
+                if (isManagedItem(item)) {
+                    try {
+                        linkRegistry.remove(link.getUID());
+                    } catch (Exception ex) {
+                        logger.warn("Could not remove old link {} -> {}: {}", item, oldUid, ex.getMessage());
+                    }
+
+                    linkRegistry.add(new ItemChannelLink(item, newUid));
+                    logger.info("Re-linked item '{}' from '{}' to '{}'", item, oldUid.getId(), newUid.getId());
+                }
+            }
+        }
+        updateProperty("thingTypeVersion", Integer.toString(DEVICE_THING_TYPE_VERSION));
     }
 
     @Override
@@ -94,12 +208,12 @@ public class DeviceHandler extends AquatempThingHandler {
                 logger.trace("ChannelUID: {} | Properties: {}", ch.getUID().getId(), ch.getProperties());
                 String json;
                 Properties prop = new Properties();
-                if ("powerState".equals(ch.getUID().getId())) {
+                if ("power-state".equals(ch.getUID().getId())) {
                     String state = (OnOffType.ON.equals(command) ? "1" : "0");
                     prop.put("Power", state);
                 }
 
-                if ("silentMode".equals(ch.getUID().getId())) {
+                if ("silent-mode".equals(ch.getUID().getId())) {
                     String state = (OnOffType.ON.equals(command) ? "1" : "0");
                     prop.put("Manual-mute", state);
                 }
@@ -109,7 +223,7 @@ public class DeviceHandler extends AquatempThingHandler {
                     prop.put("mode", state);
                 }
 
-                if ("targetTemperature".equals(ch.getUID().getId())) {
+                if ("target-temperature".equals(ch.getUID().getId())) {
                     String state = command.toString().substring(0, 2);
                     prop.put("R01", state);
                     prop.put("R02", state);
@@ -117,7 +231,7 @@ public class DeviceHandler extends AquatempThingHandler {
                     prop.put("Set_Temp", state);
                 }
 
-                json = getJson(prop);
+                json = buildJson(prop);
                 if (json != null) {
                     Bridge bridge = getBridge();
                     AquatempBridgeHandler bridgeHandler = bridge == null ? null
@@ -136,22 +250,21 @@ public class DeviceHandler extends AquatempThingHandler {
         }
     }
 
-    private @Nullable String getJson(@Nullable Properties prop) {
-        if (prop != null) {
-            logger.trace("Properties:{}", prop);
-            StringBuilder sb = new StringBuilder();
-            sb.append("{\"param\":[");
-            prop.forEach((k, v) -> {
-                logger.trace("protocolCode : {} | value: {}", k, v);
-                sb.append("{ \"device_code\": \"").append(getDeviceId()).append("\", \"protocol_code\": ");
-                sb.append("\"").append(k).append("\",\"value\": \"").append(v).append("\" }");
-                sb.append(", ");
-            });
-            sb.append("]}");
-
-            return sb.substring(0, sb.toString().length() - 4) + sb.substring(sb.toString().length() - 2);
+    private @Nullable String buildJson(@Nullable Properties prop) {
+        if (prop == null || prop.isEmpty()) {
+            return null;
         }
-        return null;
+
+        logger.trace("Properties: {}", prop);
+
+        ParamRequest request = new ParamRequest();
+
+        prop.forEach((k, v) -> {
+            logger.trace("protocolCode : {} | value: {}", k, v);
+            request.param.add(new ParamDTO(getDeviceId(), String.valueOf(k), String.valueOf(v)));
+        });
+
+        return new Gson().toJson(request);
     }
 
     @Override
@@ -195,29 +308,29 @@ public class DeviceHandler extends AquatempThingHandler {
             powerState = true;
         }
 
-        updateState("powerState", powerState ? OnOffType.ON : OnOffType.OFF);
-        updateState("silentMode", silentMode ? OnOffType.ON : OnOffType.OFF);
+        updateState("power-state", powerState ? OnOffType.ON : OnOffType.OFF);
+        updateState("silent-mode", silentMode ? OnOffType.ON : OnOffType.OFF);
 
-        updateChannelState("inletTemperature", String.valueOf(inletTemperature), SIUnits.CELSIUS.getSymbol());
-        updateChannelState("outletTemperature", String.valueOf(outletTemperature), SIUnits.CELSIUS.getSymbol());
-        updateChannelState("ambientTemperature", String.valueOf(ambientTemperature), SIUnits.CELSIUS.getSymbol());
+        updateChannelState("inlet-temperature", String.valueOf(inletTemperature), SIUnits.CELSIUS.getSymbol());
+        updateChannelState("outlet-temperature", String.valueOf(outletTemperature), SIUnits.CELSIUS.getSymbol());
+        updateChannelState("ambient-temperature", String.valueOf(ambientTemperature), SIUnits.CELSIUS.getSymbol());
 
-        updateChannelState("targetTemperature", String.valueOf(targetTemperature), SIUnits.CELSIUS.getSymbol());
+        updateChannelState("target-temperature", String.valueOf(targetTemperature), SIUnits.CELSIUS.getSymbol());
 
         updateChannelState("consumption", String.valueOf(consumption), Units.WATT.toString());
 
-        updateState("mode", DecimalType.valueOf(findValueByCode(data, "Mode")));
+        updateState("mode", StringType.valueOf(findValueByCode(data, "Mode")));
     }
 
     @Override
     public void handleUpdateError(ErrorDTO error) {
         if (error.totalSize > 0) {
-            updateState("errorIsActive", OnOffType.ON);
+            updateState("error-is-active", OnOffType.ON);
             ErrorObjectResult obj = error.objectResult.get(0);
             String description = obj.getFaultCode() + " - " + obj.getDescription();
-            updateState("errorMessage", StringType.valueOf(description));
+            updateState("error-message", StringType.valueOf(description));
         } else {
-            updateState("errorIsActive", OnOffType.OFF);
+            updateState("error-is-active", OnOffType.OFF);
         }
     }
 
@@ -237,5 +350,17 @@ public class DeviceHandler extends AquatempThingHandler {
             }
         }
         return "";
+    }
+
+    private boolean isManagedItem(String itemName) {
+        boolean isManaged = managedItemProvider.getAll().stream().anyMatch(item -> item.getName().equals(itemName));
+
+        if (isManaged) {
+            return true; // item comes from UI / JSONDB
+        }
+
+        // fallback: treat as file-based
+        logger.debug("Item '{}' not found in managed provider – treating as file-based.", itemName);
+        return false;
     }
 }
