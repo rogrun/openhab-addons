@@ -12,12 +12,15 @@
  */
 package org.openhab.binding.viessmann.internal.dto.features;
 
+import java.util.List;
+
 /**
- * The {@link FeatureScheduleParams} provides schedule parameters of features
+ * The {@link FeatureListString} provides list with string value of features
  *
  * @author Ronny Grun - Initial contribution
  */
-public class FeatureScheduleParams {
-    public FeatureSetDate start;
-    public FeatureSetDate end;
+public class FeatureListString {
+    public String type;
+    public List<String> value = null;
+    public String unit;
 }

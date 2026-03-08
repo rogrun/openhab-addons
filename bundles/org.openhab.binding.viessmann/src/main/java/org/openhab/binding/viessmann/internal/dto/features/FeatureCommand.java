@@ -12,13 +12,22 @@
  */
 package org.openhab.binding.viessmann.internal.dto.features;
 
+import java.util.ArrayList;
+import java.util.Map;
+
 /**
- * The {@link FeatureSetDate} provides set date of features
+ * The {@link FeatureCommand} provides default command of features
  *
  * @author Ronny Grun - Initial contribution
  */
-public class FeatureSetDate {
-    public Boolean required;
-    public String type;
-    public FeatureConstraintsEmpty constraints;
+public class FeatureCommand {
+    public String uri;
+    public String name;
+    public boolean isExecutable;
+    public Map<String, FeatureCommandParams> params;
+    public boolean isDeprecated;
+
+    public ArrayList<String> getAllParams() {
+        return params == null ? new ArrayList<>() : new ArrayList<>(params.keySet());
+    }
 }
