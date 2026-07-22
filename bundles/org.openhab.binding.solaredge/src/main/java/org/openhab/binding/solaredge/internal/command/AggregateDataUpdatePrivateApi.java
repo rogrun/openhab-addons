@@ -94,7 +94,7 @@ public class AggregateDataUpdatePrivateApi extends AbstractCommand implements So
 
     @Override
     protected String getURL() {
-        return PRIVATE_DATA_API_URL + config.getSolarId() + urlSuffix;
+        return PRIVATE_DATA_API_URL_AGGREGATE + config.getSolarId() + urlSuffix;
     }
 
     @Override

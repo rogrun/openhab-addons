@@ -62,10 +62,11 @@ public class SolarEdgeBindingConstants {
 
     // PRIVATE API CONSTANTS
     // URLs
-    public static final String PRIVATE_DATA_API_URL = "https://monitoring.solaredge.com/solaredge-apigw/api/site/";
+    public static final String PRIVATE_DATA_API_URL = "https://monitoring.solaredge.com/services/dashboard/power-flow/v2/sites/";
+    public static final String PRIVATE_DATA_API_URL_AGGREGATE = "https://monitoring.solaredge.com/solaredge-apigw/api/site/";
     public static final String PRIVATE_DATA_API_URL_AGGREGATE_DATA_DAY_WEEK_SUFFIX = "/powerDashboardChart";
     public static final String PRIVATE_DATA_API_URL_AGGREGATE_DATA_MONTH_YEAR_SUFFIX = "/energyDashboardChart";
-    public static final String PRIVATE_DATA_API_URL_LIVE_DATA_SUFFIX = "/currentPowerFlow.json";
+    public static final String PRIVATE_DATA_API_URL_LIVE_DATA_SUFFIX = "?components=grid&components=consumption&components=dc-storage";
 
     // field names
     public static final String PRIVATE_API_TOKEN_COOKIE_NAME = "SPRING_SECURITY_REMEMBER_ME_COOKIE";
