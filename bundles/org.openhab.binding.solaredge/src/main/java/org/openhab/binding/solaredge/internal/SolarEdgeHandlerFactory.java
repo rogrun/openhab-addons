@@ -17,6 +17,7 @@ import static org.openhab.binding.solaredge.internal.SolarEdgeBindingConstants.*
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
+import org.eclipse.jetty.client.WWWAuthenticationProtocolHandler;
 import org.openhab.binding.solaredge.internal.handler.SolarEdgeGenericHandler;
 import org.openhab.core.io.net.http.HttpClientFactory;
 import org.openhab.core.thing.Thing;
@@ -26,6 +27,7 @@ import org.openhab.core.thing.binding.ThingHandler;
 import org.openhab.core.thing.binding.ThingHandlerFactory;
 import org.osgi.service.component.annotations.Activate;
 import org.osgi.service.component.annotations.Component;
+import org.osgi.service.component.annotations.Deactivate;
 import org.osgi.service.component.annotations.Reference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +50,18 @@ public class SolarEdgeHandlerFactory extends BaseThingHandlerFactory {
     private final HttpClient httpClient;
 
     @Activate
-    public SolarEdgeHandlerFactory(@Reference HttpClientFactory httpClientFactory) {
-        this.httpClient = httpClientFactory.getCommonHttpClient();
+    public SolarEdgeHandlerFactory(@Reference HttpClientFactory httpClientFactory) throws Exception {
+        this.httpClient = httpClientFactory.createHttpClient(BINDING_ID);
+        httpClient.start();
+
+        // SolarEdge may return a 401 response without the mandatory WWW-Authenticate header. Jetty's authentication
+        // protocol handler turns that response into a protocol failure, hiding the actual status code from the binding.
+        httpClient.getProtocolHandlers().remove(WWWAuthenticationProtocolHandler.NAME);
+    }
+
+    @Deactivate
+    public void deactivate() throws Exception {
+        httpClient.stop();
     }
 
     @Override

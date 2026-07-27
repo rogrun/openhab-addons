@@ -28,7 +28,7 @@ import org.openhab.core.thing.ThingTypeUID;
 @NonNullByDefault
 public class SolarEdgeBindingConstants {
 
-    private static final String BINDING_ID = "solaredge";
+    public static final String BINDING_ID = "solaredge";
 
     // List of main device types
     public static final String DEVICE_GENERIC = "generic";
@@ -71,8 +71,6 @@ public class SolarEdgeBindingConstants {
 
     // field names
     public static final String PRIVATE_API_TOKEN_COOKIE_NAME = "SPRING_SECURITY_REMEMBER_ME_COOKIE";
-    public static final String PRIVATE_API_TOKEN_COOKIE_DOMAIN = "monitoring.solaredge.com";
-    public static final String PRIVATE_API_TOKEN_COOKIE_PATH = "/";
     public static final String PRIVATE_DATA_API_AGGREGATE_DATA_CHARTFIELD_FIELD = "chartField";
 
     //

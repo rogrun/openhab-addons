@@ -14,10 +14,7 @@ package org.openhab.binding.solaredge.internal.command;
 
 import static org.openhab.binding.solaredge.internal.SolarEdgeBindingConstants.*;
 
-import java.net.CookieStore;
-import java.net.HttpCookie;
 import java.net.SocketTimeoutException;
-import java.net.URI;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.util.concurrent.TimeUnit;
@@ -29,6 +26,7 @@ import org.eclipse.jetty.client.HttpClient;
 import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.client.util.BufferingResponseListener;
+import org.eclipse.jetty.http.HttpHeader;
 import org.eclipse.jetty.http.HttpStatus;
 import org.eclipse.jetty.http.HttpStatus.Code;
 import org.openhab.binding.solaredge.internal.config.SolarEdgeConfiguration;
@@ -136,12 +134,9 @@ public abstract class AbstractCommand extends BufferingResponseListener implemen
         // add authentication data for every request. Handling this here makes it obsolete to implement for each and
         // every command
         if (config.isUsePrivateApi()) {
-            // token cookie is only used by private API therefore this can be skipped when using public API
-            CookieStore cookieStore = asyncclient.getCookieStore();
-            HttpCookie c = new HttpCookie(PRIVATE_API_TOKEN_COOKIE_NAME, config.getTokenOrApiKey());
-            c.setDomain(PRIVATE_API_TOKEN_COOKIE_DOMAIN);
-            c.setPath(PRIVATE_API_TOKEN_COOKIE_PATH);
-            cookieStore.add(URI.create(getURL()), c);
+            // Set the token on the request instead of the client's shared cookie store. This prevents credentials from
+            // different SolarEdge things from replacing each other.
+            request.header(HttpHeader.COOKIE, PRIVATE_API_TOKEN_COOKIE_NAME + "=" + config.getTokenOrApiKey());
         } else {
             // this is only relevant when using public API
             request.param(PUBLIC_DATA_API_KEY_FIELD, config.getTokenOrApiKey());

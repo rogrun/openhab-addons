@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.solaredge.internal.handler;
 
+import static org.openhab.binding.solaredge.internal.SolarEdgeBindingConstants.STATUS_INVALID_TOKEN;
 import static org.openhab.binding.solaredge.internal.SolarEdgeBindingConstants.STATUS_WAITING_FOR_LOGIN;
 
 import java.util.ArrayList;
@@ -166,6 +167,10 @@ public class SolarEdgeGenericHandler extends BaseThingHandler implements SolarEd
                 break;
             case OK:
                 updateStatus(ThingStatus.ONLINE, ThingStatusDetail.NONE);
+                break;
+            case UNAUTHORIZED:
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                        getConfiguration().isUsePrivateApi() ? STATUS_INVALID_TOKEN : status.getMessage());
                 break;
             default:
                 updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, status.getMessage());

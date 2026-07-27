@@ -119,6 +119,7 @@ public class WebInterface implements AtomicReferenceTrait {
                     setAuthenticated(true);
                     break;
                 case FOUND:
+                case UNAUTHORIZED:
                     handler.setStatusInfo(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
                             errorMessageCodeFound);
                     setAuthenticated(false);
