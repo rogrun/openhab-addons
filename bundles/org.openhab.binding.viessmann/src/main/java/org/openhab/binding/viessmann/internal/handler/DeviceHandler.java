@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2010-2025 Contributors to the openHAB project
+/**
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -409,13 +409,13 @@ public class DeviceHandler extends ViessmannThingHandler {
                     switch (entry) {
                         case "value":
                             viUnit = prop.value.unit;
-                            typeEntry = switch (viUnit) {
+                            typeEntry = viUnit == null ? prop.value.type : switch (viUnit) {
                                 case "celsius" -> "temperature";
                                 case "percent", "kelvin", "liter", "bar" -> viUnit;
                                 case "minute" -> "duration";
                                 case "revolutionsPerSecond" -> "revolutions-per-second";
                                 case "kilowattHour/year" -> "house-heating-load";
-                                case null, default -> prop.value.type;
+                                default -> prop.value.type;
                             };
                             if ("liter/hour".equals(viUnit)) {
                                 valueEntry = String.valueOf(Double.parseDouble(prop.value.value) / 60);
