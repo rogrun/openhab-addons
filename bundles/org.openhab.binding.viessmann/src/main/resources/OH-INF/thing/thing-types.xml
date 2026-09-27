@@ -7,8 +7,6 @@
 	<bridge-type id="account">
 		<label>Viessmann Account</label>
 		<description>Account Bridge with Client ID</description>
-		<semantic-equipment-tag>WebService</semantic-equipment-tag>
-
 		<channels>
 			<channel id="count-api-calls" typeId="number">
 				<label>Count API Calls</label>
@@ -77,8 +75,6 @@
 
 		<label>Viessmann Gateway</label>
 		<description>The gateway to communicate with the Viessmann Account</description>
-		<semantic-equipment-tag>NetworkAppliance</semantic-equipment-tag>
-
 		<channels>
 			<channel id="error-is-active" typeId="error-is-active">
 				<label>Error Is Active</label>
@@ -123,8 +119,6 @@
 	<bridge-type id="bridge" listed="false">
 		<label>Bridge (DEPRECATED)</label>
 		<description>The bridge to communicate with the Viessmann API</description>
-		<semantic-equipment-tag>WebService</semantic-equipment-tag>
-
 		<channels>
 			<channel id="count-api-calls" typeId="number">
 				<label>Count API Calls</label>
@@ -215,8 +209,6 @@
 			<bridge-type-ref id="gateway"/>
 		</supported-bridge-type-refs>
 		<label>Viessmann Device</label>
-		<semantic-equipment-tag>WaterHeater</semantic-equipment-tag>
-
 		<properties>
 			<property name="thingTypeVersion">5</property>
 		</properties>
