@@ -14,6 +14,7 @@ package org.openhab.binding.dreame.internal.api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_SELF;
@@ -84,10 +85,10 @@ class DreameApiClientTest {
     @Test
     void passwordLoginBodyMatchesReferenceProtocol() throws DreameCloudException {
         assertEquals(
-                "platform=IOS&scope=all&grant_type=password&username=user@example.com&password=ab51518dc498dcac64b000f288be8ea6&type=account",
+                "platform=IOS&scope=all&grant_type=password&username=user%40example.com&password=ab51518dc498dcac64b000f288be8ea6&type=account",
                 DreameAuthenticationService.createPasswordRequestBody("user@example.com", "secret", ""));
         assertEquals(
-                "platform=IOS&scope=all&grant_type=password&username=user@example.com&password=ab51518dc498dcac64b000f288be8ea6&type=account&country=DE&lang=de",
+                "platform=IOS&scope=all&grant_type=password&username=user%40example.com&password=ab51518dc498dcac64b000f288be8ea6&type=account&country=DE&lang=de",
                 DreameAuthenticationService.createPasswordRequestBody("user@example.com", "secret", "de"));
     }
 
@@ -99,11 +100,12 @@ class DreameApiClientTest {
     }
 
     @Test
-    void deviceParserKeepsOnlyMowers() throws DreameCloudException {
+    void deviceParserRecognizesMowersAndVacuumCandidates() throws DreameCloudException {
         String json = """
                 {"code":0,"data":{"page":{"records":[
                   {"did":"123","customName":"","model":"dreame.mower.g2422","masterUid":"42","bindDomain":"host:8883","property":"{}",
                    "deviceInfo":{"displayName":"A1 Pro 2000"}},
+                  {"did":"124","customName":"MOVA 1000","model":"mova.mower.g2405c","masterUid":"43","bindDomain":"mova-host:19974","property":"{}"},
                   {"did":"456","name":"Vacuum","model":"dreame.vacuum.r2228o"}
                 ]}}}
                 """;
@@ -111,8 +113,31 @@ class DreameApiClientTest {
         List<DreameDevice> devices = new DreameApiResponseParser()
                 .parseDevices(JsonParser.parseString(json).getAsJsonObject());
 
-        assertEquals(List.of(new DreameDevice("123", "A1 Pro 2000", "dreame.mower.g2422", "", "42", "host:8883", "{}")),
-                devices);
+        assertEquals(List.of(new DreameDevice("123", "A1 Pro 2000", "dreame.mower.g2422", "", "42", "host:8883", "{}"),
+                new DreameDevice("124", "MOVA 1000", "mova.mower.g2405c", "", "43", "mova-host:19974", "{}"),
+                new DreameDevice("456", "Vacuum", "dreame.vacuum.r2228o", "", "", "", "")), devices);
+    }
+
+    @Test
+    void deviceParserRejectsUnknownAndMalformedCandidatesWithoutLosingMowers() throws DreameCloudException {
+        String json = """
+                {"data":{"page":{"records":[
+                  null, 42,
+                  {"did":"1","model":"unknown.vacuum.example"},
+                  {"did":"2","model":"dreame.vacuum."},
+                  {"did":"3","model":{}},
+                  {"did":{},"model":"dreame.vacuum.example"},
+                  {"model":"dreame.vacuum.example"},
+                  {"did":"4","model":"dreame.vacuum.example","ver":{},"property":[],"name":{}},
+                  {"did":"5","model":"mova.mower.g2405c"}
+                ]}}}
+                """;
+        List<DreameDevice> devices = new DreameApiResponseParser()
+                .parseDevices(JsonParser.parseString(json).getAsJsonObject());
+        assertEquals(List.of("4", "5"), devices.stream().map(DreameDevice::id).toList());
+        assertEquals(List.of("5"), devices.stream().filter(DreameDevice::isMower).map(DreameDevice::id).toList());
+        assertEquals(List.of("4"), devices.stream().filter(DreameDevice::isVacuum).map(DreameDevice::id).toList());
+        assertEquals("", devices.getFirst().version());
     }
 
     @Test
@@ -138,6 +163,51 @@ class DreameApiClientTest {
         assertTrue(status.contains(DreameProperty.BATTERY_LEVEL));
         assertFalse(status.contains(DreameProperty.ERROR));
         assertEquals(3, status.properties().size());
+    }
+
+    @Test
+    void propertyParserMapsMovaValuesWithDeviceIdInDid() {
+        String json = """
+                [
+                  {"did":"-123456789","siid":2,"piid":1,"code":0,"value":13},
+                  {"did":"-123456789","siid":3,"piid":1,"code":0,"value":100},
+                  {"did":"-123456789","siid":3,"piid":2,"code":0,"value":2}
+                ]
+                """;
+
+        DreameStatus status = new DreameApiResponseParser().parseProperties(
+                JsonParser.parseString(json).getAsJsonArray(),
+                List.of(DreameProperty.STATE, DreameProperty.BATTERY_LEVEL, DreameProperty.CHARGING_STATUS));
+
+        assertEquals(13, status.integer(DreameProperty.STATE, -1));
+        assertEquals(100, status.integer(DreameProperty.BATTERY_LEVEL, -1));
+        assertEquals(2, status.integer(DreameProperty.CHARGING_STATUS, -1));
+        assertEquals(3, status.properties().size());
+    }
+
+    @Test
+    void propertyParserMapsAddressedValueWithoutDid() {
+        String json = """
+                [{"siid":5,"piid":1,"code":0,"value":true}]
+                """;
+
+        DreameStatus status = new DreameApiResponseParser()
+                .parseProperties(JsonParser.parseString(json).getAsJsonArray(), List.of(DreameProperty.DND));
+
+        assertTrue(status.contains(DreameProperty.DND));
+        assertEquals(true, status.bool(DreameProperty.DND, false));
+    }
+
+    @Test
+    void propertyParserMapsDndTaskConfiguration() {
+        String json = """
+                [{"siid":5,"piid":4,"code":0,"value":"[{\\\"id\\\":1,\\\"en\\\":true}]"}]
+                """;
+
+        DreameStatus status = new DreameApiResponseParser()
+                .parseProperties(JsonParser.parseString(json).getAsJsonArray(), List.of(DreameProperty.DND_TASK));
+
+        assertEquals("[{\"id\":1,\"en\":true}]", status.string(DreameProperty.DND_TASK));
     }
 
     @Test
@@ -176,6 +246,24 @@ class DreameApiClientTest {
     }
 
     @Test
+    void rejectsUnverifiedMovaDndWriteBeforeCloudRequest() {
+        DreameDevice device = new DreameDevice("123", "MOVA", "mova.mower.g2584d", "1.0", "42", "host:19973", "{}");
+        DreameApiClient client = new DreameApiClient(Objects.requireNonNull(mock(HttpClient.class)), Clock.systemUTC());
+
+        assertThrows(DreameCloudException.class, () -> client.setDnd(device, true, null));
+    }
+
+    @Test
+    void mapSelectionUsesConfirmedMovaActionPayload() {
+        DreameDevice device = new DreameDevice("123", "MOVA 1000", "mova.mower.g2405c", "1.0", "42",
+                "20000.mt.eu.iot.dreame.tech:19973", "{}");
+
+        assertEquals("""
+                {"did":"123","siid":2,"aiid":50,"in":[{"m":"a","p":0,"o":200,"d":{"idx":"1"}}]}""",
+                DreameApiClient.createMapSelectionParameters(device, 1).toString());
+    }
+
+    @Test
     void mapParserReassemblesChunksAndExtractsDescriptors() throws DreameCloudException {
         String map = "{\"mapIndex\":0,\"name\":\"Garden\",\"totalArea\":152.5,"
                 + "\"boundary\":{\"x1\":0,\"y1\":0,\"x2\":100,\"y2\":200},"
@@ -198,6 +286,43 @@ class DreameApiClientTest {
         assertEquals("Front", data.zones().get(0).name());
         assertEquals(new java.math.BigDecimal("42.25"), data.zones().get(0).area());
         assertEquals(3, data.geometries().get(0).zones().get(0).points().size());
+    }
+
+    @Test
+    void mapParserFiltersEmptyMapPlaceholders() throws DreameCloudException {
+        String activeMap = "{\"mapIndex\":0,\"name\":\"Garden\",\"totalArea\":152.5,"
+                + "\"boundary\":{\"x1\":0,\"y1\":0,\"x2\":100,\"y2\":200}}";
+        String placeholder = "{\"mapIndex\":1,\"name\":\"\",\"totalArea\":0,"
+                + "\"boundary\":{\"x1\":0,\"y1\":0,\"x2\":0,\"y2\":0}}";
+        com.google.gson.JsonObject batch = new com.google.gson.JsonObject();
+        batch.addProperty("MAP.0", new com.google.gson.Gson().toJson(List.of(activeMap, placeholder)));
+
+        DreameMapData data = new DreameApiResponseParser().parseMapData(batch, JsonParser.parseString("""
+                {"code":0,"out":[{"r":0,"d":[[0,1],[1,0]]}]}
+                """));
+
+        assertEquals(1, data.maps().size());
+        assertEquals("Garden", data.maps().get(0).name());
+        assertEquals(1, data.geometries().size());
+    }
+
+    @Test
+    void mapParserExposesOnlyZonesOfActiveMap() throws DreameCloudException {
+        String firstMap = "{\"mapIndex\":0,\"name\":\"Garden\",\"totalArea\":100,"
+                + "\"boundary\":{\"x1\":0,\"y1\":0,\"x2\":100,\"y2\":100},"
+                + "\"mowingAreas\":{\"value\":[[1,{\"name\":\"Front\",\"area\":40}]]}}";
+        String secondMap = "{\"mapIndex\":1,\"name\":\"Neighbour\",\"totalArea\":80,"
+                + "\"boundary\":{\"x1\":0,\"y1\":0,\"x2\":80,\"y2\":80},"
+                + "\"mowingAreas\":{\"value\":[[1,{\"name\":\"Back\",\"area\":30}],[2,{\"name\":\"Side\",\"area\":20}]]}}";
+        com.google.gson.JsonObject batch = new com.google.gson.JsonObject();
+        batch.addProperty("MAP.0", new com.google.gson.Gson().toJson(List.of(firstMap, secondMap)));
+
+        DreameMapData data = new DreameApiResponseParser().parseMapData(batch, JsonParser.parseString("""
+                {"code":0,"out":[{"r":0,"d":[[0,0],[1,1]]}]}
+                """));
+
+        assertEquals(2, data.currentMapId());
+        assertEquals(List.of("Back", "Side"), data.zones().stream().map(zone -> zone.name()).toList());
     }
 
     @Test

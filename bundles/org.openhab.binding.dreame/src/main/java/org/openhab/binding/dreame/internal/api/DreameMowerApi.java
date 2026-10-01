@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
+import org.eclipse.jdt.annotation.Nullable;
 import org.openhab.binding.dreame.internal.model.DreameAction;
 import org.openhab.binding.dreame.internal.model.DreameDevice;
 import org.openhab.binding.dreame.internal.model.DreameMapData;
@@ -32,7 +33,8 @@ import org.openhab.binding.dreame.internal.model.DreameStatus;
 @NonNullByDefault
 public interface DreameMowerApi {
 
-    void login(String username, String password, String country) throws DreameCloudException;
+    void login(String username, String password, String country, DreameCloudService cloudService)
+            throws DreameCloudException;
 
     void logout();
 
@@ -46,9 +48,13 @@ public interface DreameMowerApi {
 
     void setProperty(DreameDevice device, DreameProperty property, boolean value) throws DreameCloudException;
 
+    void setDnd(DreameDevice device, boolean enabled, @Nullable String taskConfiguration) throws DreameCloudException;
+
     void callAction(DreameDevice device, DreameAction action) throws DreameCloudException;
 
     void startZoneMowing(DreameDevice device, List<Integer> zoneIds) throws DreameCloudException;
+
+    void selectMap(DreameDevice device, int mapIndex) throws DreameCloudException;
 
     BigDecimal getCuttingHeight(DreameDevice device, int mapIndex) throws DreameCloudException;
 

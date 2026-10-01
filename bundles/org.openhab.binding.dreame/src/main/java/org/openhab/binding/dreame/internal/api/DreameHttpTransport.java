@@ -37,16 +37,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 
 /**
- * Performs authenticated HTTP requests against the regional Dreamehome API.
+ * Performs authenticated HTTP requests against the selected regional cloud API.
  *
  * @author Ronny Grun - Initial contribution
  */
 @NonNullByDefault
 final class DreameHttpTransport {
-    private static final String API_SUFFIX = ".iot.dreame.tech:13267";
-    private static final String USER_AGENT = "Dreame_Smarthome/1.5.59 (iPhone; iOS 16.0; Scale/3.00)";
-    private static final String AUTHORIZATION = "Basic ZHJlYW1lX2FwcHYxOkFQXmR2QHpAU1FZVnhOODg=";
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(15);
+    private static final int MAX_FILE_CHARACTERS = 4 * 1024 * 1024;
 
     private final Logger logger = LoggerFactory.getLogger(DreameHttpTransport.class);
     private final HttpClient httpClient;
@@ -60,12 +58,14 @@ final class DreameHttpTransport {
 
     JsonObject post(String path, @Nullable String body, boolean authenticated) throws DreameCloudException {
         long started = System.nanoTime();
-        logger.trace("Dreamehome POST {} authenticated={} body={}", path, authenticated,
+        String service = authentication.cloudService().label();
+        logger.trace("{} POST {} authenticated={} body={}", service, path, authenticated,
                 DreameDiagnostics.sanitize(body));
         Request request = httpClient.newRequest(apiUrl() + path).method(HttpMethod.POST)
                 .timeout(REQUEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS).header(HttpHeader.ACCEPT, "*/*")
                 .header(HttpHeader.ACCEPT_LANGUAGE, "en-US;q=0.8").header(HttpHeader.ACCEPT_ENCODING, "gzip, deflate")
-                .header(HttpHeader.USER_AGENT, USER_AGENT).header(HttpHeader.AUTHORIZATION, AUTHORIZATION)
+                .header(HttpHeader.USER_AGENT, authentication.cloudService().userAgent())
+                .header(HttpHeader.AUTHORIZATION, authentication.cloudService().authorization())
                 .header("Tenant-Id", authentication.tenantId());
         if (authenticated) {
             request.header(HttpHeader.CONTENT_TYPE, "application/json").header("Dreame-Auth",
@@ -80,31 +80,57 @@ final class DreameHttpTransport {
         try {
             ContentResponse response = request.send();
             long elapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started);
-            logger.debug("Dreamehome POST {} returned HTTP {} in {} ms", path, response.getStatus(), elapsed);
-            if (path.endsWith("/iotuserdata/getDeviceData")) {
-                logger.trace("Dreamehome map response for {} contains {} characters", path,
+            logger.debug("{} POST {} returned HTTP {} in {} ms", service, path, response.getStatus(), elapsed);
+            if (path.endsWith("/iotuserbind/device/listV2")) {
+                logger.trace("{} device-list response received (content omitted)", service);
+            } else if (path.endsWith("/iotuserdata/getDeviceData")) {
+                logger.trace("{} map response for {} contains {} characters", service, path,
                         response.getContentAsString().length());
             } else {
-                logger.trace("Dreamehome response for {}: {}", path,
+                logger.trace("{} response for {}: {}", service, path,
                         DreameDiagnostics.sanitize(response.getContentAsString()));
             }
             if (!HttpStatus.isSuccess(response.getStatus())) {
-                throw new DreameCloudException("Dreamehome returned HTTP " + response.getStatus());
+                throw new DreameCloudException(service + " returned HTTP " + response.getStatus());
             }
             JsonElement json = gson.fromJson(response.getContentAsString(), JsonElement.class);
             if (!(json instanceof JsonObject object)) {
-                throw new DreameCloudException("Dreamehome returned an invalid response");
+                throw new DreameCloudException(service + " returned an invalid response");
             }
             return object;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new DreameCloudException("Dreamehome request was interrupted", e);
+            throw new DreameCloudException(service + " request was interrupted", e);
         } catch (ExecutionException | TimeoutException | JsonParseException e) {
-            throw new DreameCloudException("Dreamehome request failed", e);
+            throw new DreameCloudException(service + " request failed", e);
+        }
+    }
+
+    String getFile(String url) throws DreameCloudException {
+        String service = authentication.cloudService().label();
+        Request request = httpClient.newRequest(url).method(HttpMethod.GET)
+                .timeout(REQUEST_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS).header(HttpHeader.ACCEPT, "*/*")
+                .header(HttpHeader.USER_AGENT, authentication.cloudService().userAgent());
+        try {
+            ContentResponse response = request.send();
+            if (!HttpStatus.isSuccess(response.getStatus())) {
+                throw new DreameCloudException(service + " map download returned HTTP " + response.getStatus());
+            }
+            String content = response.getContentAsString();
+            if (content.isBlank() || content.length() > MAX_FILE_CHARACTERS) {
+                throw new DreameCloudException(service + " returned invalid map file data");
+            }
+            logger.debug("{} map file download returned {} characters", service, content.length());
+            return content;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new DreameCloudException(service + " map download was interrupted", e);
+        } catch (ExecutionException | TimeoutException e) {
+            throw new DreameCloudException(service + " map download failed", e);
         }
     }
 
     private String apiUrl() {
-        return "https://" + authentication.country() + API_SUFFIX;
+        return authentication.cloudService().apiUrl(authentication.country());
     }
 }

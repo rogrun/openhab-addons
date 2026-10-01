@@ -12,6 +12,7 @@
  */
 package org.openhab.binding.dreame.internal.api;
 
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gson.JsonObject;
 
 /**
- * Owns Dreamehome authentication state and access-token refresh decisions.
+ * Owns cloud authentication state and access-token refresh decisions.
  *
  * @author Ronny Grun - Initial contribution
  */
@@ -44,6 +45,7 @@ public class DreameAuthenticationService {
     private final Clock clock;
 
     private String country = "";
+    private DreameCloudService cloudService = DreameCloudService.DREAMEHOME;
     private String accessToken = "";
     private String refreshToken = "";
     private String tenantId = "000000";
@@ -60,22 +62,30 @@ public class DreameAuthenticationService {
 
     public void login(String username, String password, String location, TokenRequester requester)
             throws DreameCloudException {
+        login(username, password, location, DreameCloudService.DREAMEHOME, requester);
+    }
+
+    public void login(String username, String password, String location, DreameCloudService cloudService,
+            TokenRequester requester) throws DreameCloudException {
         String normalized = normalizeCountry(location);
         String countryCode = CLOUD_REGIONS.contains(normalized) ? "" : normalized;
+        this.cloudService = cloudService;
+        tenantId = cloudService.tenantId();
         country = cloudRegion(normalized);
-        logger.debug("Authenticating with Dreamehome region {}", country);
+        logger.debug("Authenticating with {} region {}", cloudService.label(), country);
         authenticate(createPasswordRequestBody(username, password, countryCode), requester);
     }
 
     public void ensureAuthenticated(TokenRequester requester) throws DreameCloudException {
         if (accessToken.isBlank()) {
-            throw new DreameCloudException("Not authenticated with Dreamehome");
+            throw new DreameCloudException("Not authenticated with " + cloudService.label());
         }
         if (!Instant.now(clock).isBefore(tokenExpires)) {
             if (refreshToken.isBlank()) {
-                throw new DreameCloudException("Dreamehome access token expired");
+                throw new DreameCloudException(cloudService.label() + " access token expired");
             }
-            authenticate("platform=IOS&scope=all&grant_type=refresh_token&refresh_token=" + refreshToken, requester);
+            authenticate("platform=IOS&scope=all&grant_type=refresh_token&refresh_token=" + formEncode(refreshToken),
+                    requester);
         }
     }
 
@@ -83,21 +93,22 @@ public class DreameAuthenticationService {
         JsonObject response = requester.request(body);
         String token = stringValue(response, "access_token");
         if (token.isBlank()) {
-            throw new DreameCloudException("Dreamehome login failed");
+            throw new DreameCloudException(cloudService.label() + " login failed");
         }
         accessToken = token;
         userId = defaultIfBlank(stringValue(response, "uid"), userId);
-        refreshToken = stringValue(response, "refresh_token");
+        refreshToken = defaultIfBlank(stringValue(response, "refresh_token"), refreshToken);
         tenantId = defaultIfBlank(stringValue(response, "tenant_id"), tenantId);
         country = cloudRegion(defaultIfBlank(stringValue(response, "region"), country));
         long expiresIn = response.has("expires_in") ? response.get("expires_in").getAsLong() : 3600;
         tokenExpires = Instant.now(clock).plusSeconds(Math.max(0, expiresIn - 120));
-        logger.debug("Dreamehome authentication succeeded for region {}; token lifetime is {} seconds", country,
-                expiresIn);
+        logger.debug("{} authentication succeeded for region {}; token lifetime is {} seconds", cloudService.label(),
+                country, expiresIn);
     }
 
     public void logout() {
         country = "";
+        cloudService = DreameCloudService.DREAMEHOME;
         accessToken = "";
         refreshToken = "";
         tenantId = "000000";
@@ -107,6 +118,10 @@ public class DreameAuthenticationService {
 
     public String country() {
         return country;
+    }
+
+    public DreameCloudService cloudService() {
+        return cloudService;
     }
 
     public String accessToken() {
@@ -124,9 +139,9 @@ public class DreameAuthenticationService {
     static String createPasswordRequestBody(String username, String password, String countryCode)
             throws DreameCloudException {
         String location = countryCode.isBlank() ? ""
-                : "&country=" + countryCode.toUpperCase(Locale.ROOT) + "&lang=" + countryCode;
-        return "platform=IOS&scope=all&grant_type=password&username=" + username + "&password="
-                + md5(password + PASSWORD_SALT) + "&type=account" + location;
+                : "&country=" + formEncode(countryCode.toUpperCase(Locale.ROOT)) + "&lang=" + formEncode(countryCode);
+        return "platform=IOS&scope=all&grant_type=password&username=" + formEncode(username) + "&password="
+                + formEncode(md5(password + PASSWORD_SALT)) + "&type=account" + location;
     }
 
     static String cloudRegion(String country) throws DreameCloudException {
@@ -137,13 +152,13 @@ public class DreameAuthenticationService {
         if (EUROPEAN_COUNTRIES.contains(normalized)) {
             return "eu";
         }
-        throw new DreameCloudException("Unsupported Dreamehome country or region: " + country);
+        throw new DreameCloudException("Unsupported cloud country or region: " + country);
     }
 
     private static String normalizeCountry(String value) throws DreameCloudException {
         String normalized = value.trim().toLowerCase(Locale.ROOT);
         if (normalized.isBlank()) {
-            throw new DreameCloudException("Dreamehome country or region must not be empty");
+            throw new DreameCloudException("Cloud country or region must not be empty");
         }
         return normalized;
     }
@@ -155,6 +170,10 @@ public class DreameAuthenticationService {
         } catch (NoSuchAlgorithmException e) {
             throw new DreameCloudException("MD5 is unavailable", e);
         }
+    }
+
+    private static String formEncode(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
     private static String stringValue(JsonObject object, String name) {

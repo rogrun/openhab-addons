@@ -27,6 +27,7 @@ public final class DreameBindingConstants {
 
     public static final ThingTypeUID THING_TYPE_ACCOUNT = new ThingTypeUID(BINDING_ID, "account");
     public static final ThingTypeUID THING_TYPE_MOWER = new ThingTypeUID(BINDING_ID, "mower");
+    public static final ThingTypeUID THING_TYPE_VACUUM = new ThingTypeUID(BINDING_ID, "vacuum");
 
     public static final String CHANNEL_COMMAND = "command";
     public static final String CHANNEL_STATE = "state";
@@ -35,6 +36,7 @@ public final class DreameBindingConstants {
     public static final String CHANNEL_ERROR_CODE = "error-code";
     public static final String CHANNEL_FIRMWARE = "firmware";
     public static final String CHANNEL_DND = "do-not-disturb";
+    public static final String CHANNEL_DND_ACTIVE = "do-not-disturb-active";
     public static final String CHANNEL_CURRENT_ZONE = "current-zone";
     public static final String CHANNEL_MOWING_SESSIONS = "mowing-sessions";
     public static final String CHANNEL_TOTAL_MOWING_TIME = "total-mowing-time";
@@ -59,6 +61,7 @@ public final class DreameBindingConstants {
     public static final String CHANNEL_MAPS = "maps";
     public static final String CHANNEL_ZONES = "zones";
     public static final String CHANNEL_MAP_SVG = "map-svg";
+    public static final String CHANNEL_MAP_PNG = "map-png";
     public static final String CHANNEL_ZONE_MOWING = "zone-mowing";
     public static final String CHANNEL_CUTTING_HEIGHT = "cutting-height";
 

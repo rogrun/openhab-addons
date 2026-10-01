@@ -35,6 +35,7 @@ public class DreameStatus {
     private @Nullable DreameMowerTaskStatus mowerTaskStatus;
     private @Nullable Boolean mowerTaskActive;
     private boolean missionCompleted;
+    private boolean mapChanged;
 
     public void put(DreameProperty property, JsonElement value) {
         values.put(property, value);
@@ -88,9 +89,17 @@ public class DreameStatus {
         return missionCompleted;
     }
 
+    public void setMapChanged() {
+        mapChanged = true;
+    }
+
+    public boolean mapChanged() {
+        return mapChanged;
+    }
+
     public boolean hasUpdates() {
         return !values.isEmpty() || mowerPose != null || mowerTask != null || mowerHeartbeat != null
-                || mowerTaskStatus != null || mowerTaskActive != null || missionCompleted;
+                || mowerTaskStatus != null || mowerTaskActive != null || missionCompleted || mapChanged;
     }
 
     public boolean contains(DreameProperty property) {
@@ -110,5 +119,14 @@ public class DreameStatus {
     public boolean bool(DreameProperty property, boolean fallback) {
         JsonElement value = values.get(property);
         return value == null || value.isJsonNull() ? fallback : value.getAsBoolean();
+    }
+
+    public @Nullable String string(DreameProperty property) {
+        JsonElement value = values.get(property);
+        return value == null || value.isJsonNull() ? null : value.getAsString();
+    }
+
+    public @Nullable JsonElement value(DreameProperty property) {
+        return values.get(property);
     }
 }
