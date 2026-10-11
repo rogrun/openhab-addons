@@ -35,7 +35,7 @@ public class ErrorObjectResult {
     private String createTime;
     @SerializedName("data_value")
     private String dataValue;
-    @SerializedName("fault_code")
+    @SerializedName(value = "fault_code", alternate = "faultCode")
     private String faultCode;
     @SerializedName("description")
     private String description;

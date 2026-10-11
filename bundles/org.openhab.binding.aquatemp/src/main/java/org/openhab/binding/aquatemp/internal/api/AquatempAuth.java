@@ -15,6 +15,12 @@ package org.openhab.binding.aquatemp.internal.api;
 import static org.openhab.binding.aquatemp.internal.AquatempBindingConstants.*;
 
 import java.net.CookieStore;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -34,6 +40,7 @@ import org.openhab.core.thing.ThingStatusDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 
 /**
@@ -51,6 +58,7 @@ public class AquatempAuth {
     private final AquatempApi api;
     private final String user;
     private final String password;
+    private final AquatempApiType apiType;
 
     private final HttpClient httpClient;
 
@@ -62,12 +70,13 @@ public class AquatempAuth {
     private @Nullable String refreshToken;
 
     public AquatempAuth(AquatempApi api, AquatempBridgeHandler bridgeHandler, HttpClient httpClient, String user,
-            String password) {
+            String password, AquatempApiType apiType) {
         this.api = api;
         this.httpClient = httpClient;
         this.bridgeHandler = bridgeHandler;
         this.user = user;
         this.password = password;
+        this.apiType = apiType;
         state = AquatempAuthState.NEED_AUTH;
         authResponse = null;
     }
@@ -81,7 +90,6 @@ public class AquatempAuth {
 
     public void setRefreshToken(String newRefreshToken) {
         if (!newRefreshToken.equals(refreshToken)) {
-            logger.debug("AquatempAuth: Change refreshToken from {} to {}", refreshToken, newRefreshToken);
             refreshToken = newRefreshToken;
         }
     }
@@ -115,10 +123,9 @@ public class AquatempAuth {
      */
     private void authorize() throws AquatempAuthException {
         logger.debug("AquatempAuth: State is {}: Executing step: 'authorize'", state);
-        logger.trace("AquatempAuth: Getting authorize URL={}", AQUATEMP_AUTHORIZE_URL);
+        logger.trace("AquatempAuth: Sending authorization request to {}", apiType.getLoginUrl());
 
-        String response = executeUrlAuthorize(AQUATEMP_AUTHORIZE_URL);
-        logger.trace("AquatempAuth: Auth response: {}", response);
+        String response = executeUrlAuthorize(apiType.getLoginUrl());
         try {
             authResponse = api.getGson().fromJson(response, AuthorizeResponseDTO.class);
             if (authResponse == null) {
@@ -130,12 +137,13 @@ public class AquatempAuth {
                     logger.warn("AuthorizeResponseDTO is null. This should not happen.");
                     return;
                 }
-                if ("Success".contains(resp.errorMsg)) {
+                if (Boolean.TRUE.equals(resp.isReusltSuc) && "0".equals(resp.errorCode) && resp.objectResult != null
+                        && resp.objectResult.xToken != null) {
                     api.setToken(resp.objectResult.xToken);
                     api.setTokenExpiryDate(TimeUnit.SECONDS.toMillis(3600));
                     setState(AquatempAuthState.COMPLETE);
                     bridgeHandler.updateBridgeStatus(ThingStatus.ONLINE);
-                } else if ("Error username or password".contains(resp.errorMsg)) {
+                } else if ("Error username or password".equals(resp.errorMsg)) {
                     logger.debug("AquatempAuth: Error username or password");
                     updateBridgeStatusLogin();
                 } else {
@@ -160,19 +168,14 @@ public class AquatempAuth {
     }
 
     private @Nullable String executeUrlAuthorize(String url) {
-        StringBuilder json = new StringBuilder();
-        json.append("{ \"user_name\": \"");
-        json.append(user);
-        json.append("\", \"password\": \"");
-        json.append(password);
-        json.append("\", \"type\": \"2\" }");
+        String json = buildLoginRequest(apiType, user, password);
 
         Request request = httpClient.newRequest(url).timeout(API_TIMEOUT_MS, TimeUnit.MILLISECONDS)
                 .method(HttpMethod.POST).header("Content-Type", "application/json")
                 .content(new StringContentProvider(json.toString(), "utf-8"));
         CookieStore cookieStore = httpClient.getCookieStore();
-        if (!cookieStore.get(AQUATEMP_URI).isEmpty()) {
-            cookieStore.remove(AQUATEMP_URI, cookieStore.get(AQUATEMP_URI).get(0));
+        if (!cookieStore.get(apiType.getOrigin()).isEmpty()) {
+            cookieStore.remove(apiType.getOrigin(), cookieStore.get(apiType.getOrigin()).get(0));
         }
         try {
             ContentResponse contentResponse = request.send();
@@ -180,11 +183,11 @@ public class AquatempAuth {
                 case HttpStatus.OK_200:
                     return contentResponse.getContentAsString();
                 case HttpStatus.BAD_REQUEST_400:
-                    logger.debug("BAD REQUEST(400) response received: {}", contentResponse.getContentAsString());
+                    logger.debug("BAD REQUEST (400) received from AquaTemp authorization API");
                     updateBridgeStatusApiKey();
                     return contentResponse.getContentAsString();
                 case HttpStatus.UNAUTHORIZED_401:
-                    logger.debug("UNAUTHORIZED(401) response received: {}", contentResponse.getContentAsString());
+                    logger.debug("UNAUTHORIZED (401) received from AquaTemp authorization API");
                     return contentResponse.getContentAsString();
                 case HttpStatus.NO_CONTENT_204:
                     logger.debug("HTTP response 204: No content. Check configuration");
@@ -198,8 +201,35 @@ public class AquatempAuth {
         } catch (ExecutionException e) {
             logger.debug("ExecutionException on call to Aquatemp authorization API", e);
         } catch (InterruptedException e) {
-            logger.debug("InterruptedException on call to Aquatemp authorization API: {}", e.getMessage());
+            Thread.currentThread().interrupt();
+            logger.debug("Call to AquaTemp authorization API was interrupted");
         }
         return null;
+    }
+
+    static String buildLoginRequest(AquatempApiType apiType, String user, String password) {
+        Map<String, Object> request = new LinkedHashMap<>();
+        if (apiType == AquatempApiType.GO_HEATING) {
+            request.put("userName", user);
+            request.put("password", md5(password));
+            request.put("type", 2);
+            request.put("loginSource", "Flutter-Android");
+            request.put("areaCode", "en");
+            request.put("appId", 14);
+        } else {
+            request.put("user_name", user);
+            request.put("password", password);
+            request.put("type", "2");
+        }
+        return new Gson().toJson(request);
+    }
+
+    private static String md5(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("MD5");
+            return HexFormat.of().formatHex(digest.digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("MD5 message digest is unavailable", e);
+        }
     }
 }

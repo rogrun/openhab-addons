@@ -20,7 +20,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Properties;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
@@ -31,8 +31,6 @@ import org.openhab.binding.aquatemp.internal.dto.device.DataDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.DataObjectResult;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorObjectResult;
-import org.openhab.binding.aquatemp.internal.dto.device.ParamDTO;
-import org.openhab.binding.aquatemp.internal.dto.device.ParamRequest;
 import org.openhab.binding.aquatemp.internal.util.AquatempUtil;
 import org.openhab.core.items.ManagedItemProvider;
 import org.openhab.core.library.types.DecimalType;
@@ -55,8 +53,6 @@ import org.openhab.core.types.Command;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-
 /**
  * The {@link DeviceHandler} is responsible for handling DeviceHandler
  *
@@ -69,6 +65,8 @@ public class DeviceHandler extends AquatempThingHandler {
     private final Logger logger = LoggerFactory.getLogger(DeviceHandler.class);
 
     private ThingsConfig config = new ThingsConfig();
+    private String currentMode = "";
+    private String currentTargetTemperature = "";
 
     private final ItemChannelLinkRegistry linkRegistry;
     private final ManagedItemProvider managedItemProvider;
@@ -206,39 +204,64 @@ public class DeviceHandler extends AquatempThingHandler {
             Channel ch = thing.getChannel(channelUID.getId());
             if (ch != null) {
                 logger.trace("ChannelUID: {} | Properties: {}", ch.getUID().getId(), ch.getProperties());
-                String json;
-                Properties prop = new Properties();
+                Map<String, String> parameters = new LinkedHashMap<>();
                 if ("power-state".equals(ch.getUID().getId())) {
                     String state = (OnOffType.ON.equals(command) ? "1" : "0");
-                    prop.put("Power", state);
+                    parameters.put("Power", state);
                 }
 
                 if ("silent-mode".equals(ch.getUID().getId())) {
                     String state = (OnOffType.ON.equals(command) ? "1" : "0");
-                    prop.put("Manual-mute", state);
-                }
-
-                if ("mode".equals(ch.getUID().getId())) {
-                    String state = command.toString();
-                    prop.put("mode", state);
-                }
-
-                if ("target-temperature".equals(ch.getUID().getId())) {
-                    String state = command.toString().substring(0, 2);
-                    prop.put("R01", state);
-                    prop.put("R02", state);
-                    prop.put("R03", state);
-                    prop.put("Set_Temp", state);
-                }
-
-                json = buildJson(prop);
-                if (json != null) {
                     Bridge bridge = getBridge();
                     AquatempBridgeHandler bridgeHandler = bridge == null ? null
                             : (AquatempBridgeHandler) bridge.getHandler();
                     if (bridgeHandler != null) {
                         try {
-                            bridgeHandler.controlDevice(json);
+                            bridgeHandler.controlSilentMode(getDeviceId(), state);
+                        } catch (AquatempCommunicationException e) {
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+                        }
+                    }
+                    return;
+                }
+
+                if ("mode".equals(ch.getUID().getId())) {
+                    String state = command.toString();
+                    Bridge bridge = getBridge();
+                    AquatempBridgeHandler bridgeHandler = bridge == null ? null
+                            : (AquatempBridgeHandler) bridge.getHandler();
+                    if (bridgeHandler != null) {
+                        try {
+                            bridgeHandler.controlMode(getDeviceId(), state, currentTargetTemperature);
+                        } catch (AquatempCommunicationException e) {
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+                        }
+                    }
+                    return;
+                }
+
+                if ("target-temperature".equals(ch.getUID().getId())) {
+                    String value = getTemperatureValue(command);
+                    Bridge bridge = getBridge();
+                    AquatempBridgeHandler bridgeHandler = bridge == null ? null
+                            : (AquatempBridgeHandler) bridge.getHandler();
+                    if (bridgeHandler != null) {
+                        try {
+                            bridgeHandler.controlTargetTemperature(getDeviceId(), value, currentMode);
+                        } catch (AquatempCommunicationException e) {
+                            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+                        }
+                    }
+                    return;
+                }
+
+                if (!parameters.isEmpty()) {
+                    Bridge bridge = getBridge();
+                    AquatempBridgeHandler bridgeHandler = bridge == null ? null
+                            : (AquatempBridgeHandler) bridge.getHandler();
+                    if (bridgeHandler != null) {
+                        try {
+                            bridgeHandler.controlDevice(getDeviceId(), parameters);
                         } catch (AquatempCommunicationException e) {
                             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
                         }
@@ -248,23 +271,6 @@ public class DeviceHandler extends AquatempThingHandler {
         } catch (IllegalArgumentException e) {
             logger.warn("handleCommand fails", e);
         }
-    }
-
-    private @Nullable String buildJson(@Nullable Properties prop) {
-        if (prop == null || prop.isEmpty()) {
-            return null;
-        }
-
-        logger.trace("Properties: {}", prop);
-
-        ParamRequest request = new ParamRequest();
-
-        prop.forEach((k, v) -> {
-            logger.trace("protocolCode : {} | value: {}", k, v);
-            request.param.add(new ParamDTO(getDeviceId(), String.valueOf(k), String.valueOf(v)));
-        });
-
-        return new Gson().toJson(request);
     }
 
     @Override
@@ -279,27 +285,30 @@ public class DeviceHandler extends AquatempThingHandler {
         float consumption = 0;
         boolean silentMode = false;
         boolean powerState = false;
+        String mode = findValueByCode(data, "Mode");
 
         // Consumption
-        if ("1".equals(findValueByCode(data, "Power"))) {
-            consumption = Float.parseFloat(findValueByCode(data, "T07"))
-                    * Float.parseFloat(findValueByCode(data, "T14"));
+        String current = findValueByCode(data, "T07");
+        String voltage = findValueByCode(data, "T14");
+        if ("1".equals(findValueByCode(data, "Power")) && !current.isBlank() && !voltage.isBlank()) {
+            consumption = Float.parseFloat(current) * Float.parseFloat(voltage);
         }
 
-        // Inlet-Temperature T02
-        float inletTemperature = Float.parseFloat((findValueByCode(data, "T02")));
+        // Inlet-Temperature
+        float inletTemperature = Float.parseFloat(findValueByCode(data, "T02", "InletWaterTemp"));
 
-        // outlet-Temperature T03
-        float outletTemperature = Float.parseFloat((findValueByCode(data, "T03")));
+        // Outlet-Temperature
+        float outletTemperature = Float.parseFloat(findValueByCode(data, "T03", "OutletWaterTemp"));
 
-        // Target-Temperature Set_Temp
-        float targetTemperature = Float.parseFloat((findValueByCode(data, "Set_Temp")));
+        // Target-Temperature
+        String targetTemperatureCode = getTargetTemperatureCode(mode);
+        float targetTemperature = Float.parseFloat(findValueByCode(data, "Set_Temp", targetTemperatureCode));
 
-        // ambient temperature T05
-        float ambientTemperature = Float.parseFloat((findValueByCode(data, "T05")));
+        // Ambient temperature
+        float ambientTemperature = Float.parseFloat(findValueByCode(data, "T05", "AT"));
 
-        // silent mode Manual-mute
-        if ("1".equals(findValueByCode(data, "Manual-mute"))) {
+        // Silent mode
+        if ("1".equals(findValueByCode(data, "Manual-mute", "EnSlient"))) {
             silentMode = true;
         }
 
@@ -319,19 +328,39 @@ public class DeviceHandler extends AquatempThingHandler {
 
         updateChannelState("consumption", String.valueOf(consumption), Units.WATT.toString());
 
-        updateState("mode", StringType.valueOf(findValueByCode(data, "Mode")));
+        updateState("mode", StringType.valueOf(mode));
+        currentMode = mode;
+        currentTargetTemperature = Float.toString(targetTemperature);
     }
 
     @Override
     public void handleUpdateError(ErrorDTO error) {
-        if (error.totalSize > 0) {
+        if (error.objectResult != null && !error.objectResult.isEmpty()) {
             updateState("error-is-active", OnOffType.ON);
-            ErrorObjectResult obj = error.objectResult.get(0);
-            String description = obj.getFaultCode() + " - " + obj.getDescription();
-            updateState("error-message", StringType.valueOf(description));
+            String description = error.objectResult.stream().map(DeviceHandler::formatError).filter(s -> !s.isEmpty())
+                    .collect(Collectors.joining("; "));
+            updateState("error-message",
+                    StringType.valueOf(description.isEmpty() ? "Device fault reported" : description));
         } else {
-            updateState("error-is-active", OnOffType.OFF);
+            handleDeviceFaultStatus(false);
         }
+    }
+
+    public void handleDeviceFaultStatus(boolean isFault) {
+        updateState("error-is-active", isFault ? OnOffType.ON : OnOffType.OFF);
+        updateState("error-message", StringType.valueOf(""));
+    }
+
+    static String formatError(ErrorObjectResult error) {
+        String faultCode = Objects.requireNonNullElse(error.getFaultCode(), "").trim();
+        String description = Objects.requireNonNullElse(error.getDescription(), "").trim();
+        if (faultCode.isEmpty()) {
+            return description;
+        }
+        if (description.isEmpty()) {
+            return faultCode;
+        }
+        return faultCode + " - " + description;
     }
 
     private void updateChannelState(String channelId, String stateAsString, @Nullable String unit) {
@@ -343,13 +372,37 @@ public class DeviceHandler extends AquatempThingHandler {
         }
     }
 
-    private String findValueByCode(DataDTO data, String code) {
+    private String findValueByCode(DataDTO data, String... codes) {
         for (DataObjectResult dataObjectResult : data.objectResult) {
-            if (code.equals(dataObjectResult.code)) {
-                return dataObjectResult.value;
+            for (String code : codes) {
+                if (code.equals(dataObjectResult.code)) {
+                    return dataObjectResult.value;
+                }
             }
         }
         return "";
+    }
+
+    private String getTemperatureValue(Command command) {
+        if (command instanceof QuantityType<?> quantity) {
+            QuantityType<?> celsius = quantity.toUnit(SIUnits.CELSIUS);
+            if (celsius != null) {
+                return celsius.toBigDecimal().stripTrailingZeros().toPlainString();
+            }
+        }
+        if (command instanceof DecimalType decimal) {
+            return decimal.toBigDecimal().stripTrailingZeros().toPlainString();
+        }
+        throw new IllegalArgumentException("Unsupported target-temperature command: " + command);
+    }
+
+    static String getTargetTemperatureCode(String mode) {
+        return switch (mode) {
+            case "0" -> "SetCoolTargetTemp";
+            case "1" -> "SetHeatTargetTemp";
+            case "2" -> "SetAutoTargetTemp";
+            default -> "SetCurrentTemp";
+        };
     }
 
     private boolean isManagedItem(String itemName) {

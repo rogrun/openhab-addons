@@ -24,6 +24,8 @@ public class BridgeConfiguration {
 
     public String user = "";
     public String password = "";
+    public String cloudApi = "linkedGo";
+    public String productIds = "1132174963097280512,1777261505886740482";
     public int apiCallLimit = 1450;
     public int bufferApiCommands = 450;
     public int pollingInterval = 0;

@@ -31,11 +31,13 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jetty.client.HttpClient;
 import org.openhab.binding.aquatemp.internal.AquatempDiscoveryService;
 import org.openhab.binding.aquatemp.internal.api.AquatempApi;
+import org.openhab.binding.aquatemp.internal.api.AquatempApiType;
 import org.openhab.binding.aquatemp.internal.api.AquatempCommunicationException;
 import org.openhab.binding.aquatemp.internal.config.BridgeConfiguration;
 import org.openhab.binding.aquatemp.internal.dto.device.DataDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.DataObjectResult;
 import org.openhab.binding.aquatemp.internal.dto.device.DeviceDTO;
+import org.openhab.binding.aquatemp.internal.dto.device.DeviceStatusDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.ObjectResult;
 import org.openhab.binding.aquatemp.internal.util.AquatempUtil;
@@ -172,7 +174,15 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
             migrateChannelIds();
         }
 
-        api = new AquatempApi(this, httpClient, this.config.user, this.config.password);
+        AquatempApiType apiType;
+        try {
+            apiType = AquatempApiType.fromConfig(this.config.cloudApi);
+        } catch (IllegalArgumentException e) {
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, e.getMessage());
+            return;
+        }
+        api = new AquatempApi(this, httpClient, this.config.user, this.config.password, apiType,
+                this.config.productIds);
         initJob = scheduler.schedule(() -> {
             if (disposed) {
                 return;
@@ -263,13 +273,15 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
             countApiCalls();
             if (devices != null) {
                 allDevices = devices;
-                devicesData = allDevices.objectResult;
-                if (devicesData == null) {
+                @Nullable
+                List<ObjectResult> currentDevices = allDevices.objectResult;
+                devicesData = currentDevices;
+                if (currentDevices == null) {
                     logger.warn("Device list is empty.");
                 } else {
-                    for (ObjectResult deviceData : allDevices.objectResult) {
-                        String deviceId = deviceData.deviceCode;
-                        String deviceNickName = deviceData.deviceNickName;
+                    for (ObjectResult deviceData : currentDevices) {
+                        String deviceId = deviceData.getIdentifier();
+                        String deviceNickName = deviceData.getDisplayName();
                         if (!devicesList.contains(deviceId)) {
                             devicesList.add(deviceId);
                             deviceNameMap.put(deviceId, deviceNickName);
@@ -287,14 +299,34 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
     }
 
     public void getDeviceError(DeviceHandler handler) {
+        if (!api.supportsFaultData()) {
+            return;
+        }
         String deviceId = handler.getDeviceId();
         logger.trace("Loading error-list from Aquatemp DeviceID: {}", deviceId);
         try {
+            if (api.supportsDeviceFaultStatus()) {
+                DeviceStatusDTO deviceStatus = api.getDeviceStatus(deviceId);
+                countApiCalls();
+                Boolean isFault = deviceStatus == null || deviceStatus.objectResult == null ? null
+                        : deviceStatus.objectResult.isFault;
+                if (isFault == null) {
+                    logger.warn("Device fault status is missing for DeviceID: {}", deviceId);
+                    return;
+                }
+                handler.handleDeviceFaultStatus(isFault);
+                if (!isFault) {
+                    return;
+                }
+            }
             ErrorDTO errors = api.getErrorsByDevice(deviceId);
             countApiCalls();
             logger.trace("Errors:{}", errors);
             if (errors != null) {
-                handler.handleUpdateError(errors);
+                if (!api.supportsDeviceFaultStatus()
+                        || (errors.objectResult != null && !errors.objectResult.isEmpty())) {
+                    handler.handleUpdateError(errors);
+                }
             }
         } catch (AquatempCommunicationException e) {
             handler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -305,8 +337,22 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
         }
     }
 
-    public void controlDevice(String json) throws AquatempCommunicationException {
-        api.controlDevice(json);
+    public void controlDevice(String deviceCode, Map<String, String> parameters) throws AquatempCommunicationException {
+        api.controlDevice(deviceCode, parameters);
+    }
+
+    public void controlTargetTemperature(String deviceCode, String value, String mode)
+            throws AquatempCommunicationException {
+        api.controlTargetTemperature(deviceCode, value, mode);
+    }
+
+    public void controlSilentMode(String deviceCode, String value) throws AquatempCommunicationException {
+        api.controlSilentMode(deviceCode, value);
+    }
+
+    public void controlMode(String deviceCode, String mode, String currentTargetTemperature)
+            throws AquatempCommunicationException {
+        api.controlMode(deviceCode, mode, currentTargetTemperature);
     }
 
     private Integer getPollingInterval() {
@@ -376,7 +422,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
         try {
             DataDTO allData = api.getDataByCode(deviceId);
             countApiCalls();
-            if (allData != null) {
+            if (allData != null && allData.objectResult != null) {
                 for (DataObjectResult dataObjectResult : allData.objectResult) {
                     String value = dataObjectResult.value;
                     String code = dataObjectResult.code;
@@ -385,7 +431,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
                 handler.handleUpdate(allData);
             } else {
                 handler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                        "Device not reachable | Data is NULL");
+                        "Device data is unavailable");
             }
         } catch (AquatempCommunicationException e) {
             handler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -399,20 +445,20 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
     private void checkDeviceStatus(DeviceHandler handler) {
         logger.debug("Checking device status");
         String deviceId = handler.getDeviceId();
-        if (allDevices != null) {
-            devicesData = allDevices.objectResult;
-            if (devicesData == null) {
-                logger.warn("Device list is empty.");
-            } else {
-                for (ObjectResult deviceData : allDevices.objectResult) {
-                    if (deviceId.equals(deviceData.deviceCode)) {
-                        if ("ONLINE".equals(deviceData.deviceStatus)) {
-                            handler.updateThingStatus(ThingStatus.ONLINE);
-                        } else {
-                            handler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                                    "Device not reachable");
-                            logger.trace("Device not reachable | OFFLINE");
-                        }
+        @Nullable
+        List<ObjectResult> currentDevices = allDevices.objectResult;
+        devicesData = currentDevices;
+        if (currentDevices == null) {
+            logger.warn("Device list is empty.");
+        } else {
+            for (ObjectResult deviceData : currentDevices) {
+                if (deviceId.equals(deviceData.getIdentifier())) {
+                    if ("ONLINE".equals(deviceData.deviceStatus)) {
+                        handler.updateThingStatus(ThingStatus.ONLINE);
+                    } else {
+                        handler.updateThingStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                                "Device not reachable");
+                        logger.trace("Device not reachable | OFFLINE");
                     }
                 }
             }

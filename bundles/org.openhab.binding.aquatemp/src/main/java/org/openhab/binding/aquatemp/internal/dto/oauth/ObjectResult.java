@@ -25,14 +25,16 @@ public class ObjectResult {
     public String roleName;
     @SerializedName("user_type")
     public String userType;
-    @SerializedName("user_id")
+    @SerializedName(value = "user_id", alternate = "userId")
     public String userId;
-    @SerializedName("user_name")
+    @SerializedName(value = "user_name", alternate = "userName")
     public String userName;
     @SerializedName("nick_name")
     public String nickName;
     @SerializedName("x-token")
     public String xToken;
+    public String accessKey;
+    public String appId;
     @SerializedName("real_name")
     public Object realName;
 }

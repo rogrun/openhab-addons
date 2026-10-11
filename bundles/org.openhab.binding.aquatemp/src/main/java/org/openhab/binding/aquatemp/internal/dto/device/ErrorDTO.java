@@ -29,14 +29,14 @@ public class ErrorDTO {
     public String errorMsg;
     @SerializedName("error_msg_code")
     public String errorMsgCode;
-    @SerializedName("total_size")
+    @SerializedName(value = "total_size", alternate = "totalSize")
     public Integer totalSize;
-    @SerializedName("total_page")
+    @SerializedName(value = "total_page", alternate = "totalPage")
     public Integer totalPage;
-    @SerializedName("next_page")
+    @SerializedName(value = "next_page", alternate = "nextPage")
     public Boolean nextPage;
-    @SerializedName("object_result")
+    @SerializedName(value = "object_result", alternate = "objectResult")
     public List<ErrorObjectResult> objectResult;
-    @SerializedName("is_reuslt_suc")
+    @SerializedName(value = "is_reuslt_suc", alternate = "isReusltSuc")
     public Boolean isReusltSuc;
 }

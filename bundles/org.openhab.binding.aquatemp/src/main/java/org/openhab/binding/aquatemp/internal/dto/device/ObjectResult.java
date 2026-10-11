@@ -21,20 +21,28 @@ import com.google.gson.annotations.SerializedName;
  */
 public class ObjectResult {
 
-    @SerializedName("device_status")
+    @SerializedName(value = "device_status", alternate = { "deviceStatus", "status" })
     public String deviceStatus;
-    @SerializedName("device_name")
-    public Object deviceName;
-    @SerializedName("is_fault")
+    @SerializedName(value = "device_name", alternate = "deviceName")
+    public String deviceName;
+    @SerializedName(value = "is_fault", alternate = "isFault")
     public Boolean isFault;
-    @SerializedName("device_id")
+    @SerializedName(value = "device_id", alternate = "deviceId")
     public String deviceId;
     @SerializedName("device_code")
     public String deviceCode;
-    @SerializedName("product_id")
+    @SerializedName(value = "product_id", alternate = "productId")
     public String productId;
     @SerializedName("device_type")
     public Object deviceType;
     @SerializedName("device_nick_name")
     public String deviceNickName;
+
+    public String getIdentifier() {
+        return deviceCode == null || deviceCode.isBlank() ? deviceId : deviceCode;
+    }
+
+    public String getDisplayName() {
+        return deviceNickName == null || deviceNickName.isBlank() ? deviceName : deviceNickName;
+    }
 }

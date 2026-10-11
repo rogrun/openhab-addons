@@ -29,8 +29,8 @@ public class DataDTO {
     public String errorMsg;
     @SerializedName("error_msg_code")
     public String errorMsgCode;
-    @SerializedName("object_result")
+    @SerializedName(value = "object_result", alternate = { "objectResult" })
     public List<DataObjectResult> objectResult = null;
-    @SerializedName("is_reuslt_suc")
+    @SerializedName(value = "is_reuslt_suc", alternate = { "isReusltSuc" })
     public Boolean isReusltSuc;
 }

@@ -29,6 +29,22 @@
 				<description>The password for the given E-Mail address</description>
 				<context>password</context>
 			</parameter>
+			<parameter name="cloudApi" type="text" required="false">
+				<label>Cloud API</label>
+				<description>The cloud service used by the AquaTemp account</description>
+				<default>linkedGo</default>
+				<options>
+					<option value="linkedGo">LinkedGo (legacy)</option>
+					<option value="goHeating">Go Heating (AquaTemp app 2.2.1 or newer)</option>
+				</options>
+				<limitToOptions>true</limitToOptions>
+			</parameter>
+			<parameter name="productIds" type="text" required="false">
+				<label>Go Heating Product IDs</label>
+				<description>Comma-separated product IDs sent when loading the Go Heating device list</description>
+				<default>1132174963097280512,1777261505886740482</default>
+				<advanced>true</advanced>
+			</parameter>
 			<parameter name="disablePolling" type="boolean" required="false">
 				<label>Disable polling</label>
 				<description>Deactivates the polling to carry out the manual poll using an item</description>

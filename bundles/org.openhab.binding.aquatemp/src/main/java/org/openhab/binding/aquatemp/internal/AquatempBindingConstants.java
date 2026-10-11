@@ -12,7 +12,6 @@
  */
 package org.openhab.binding.aquatemp.internal;
 
-import java.net.URI;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
@@ -38,13 +37,6 @@ public class AquatempBindingConstants {
     public static final Set<ThingTypeUID> DISCOVERABLE_DEVICE_TYPE_UIDS = Set.of(THING_TYPE_DEVICE);
 
     public static final String COUNT_API_CALLS = "count-api-calls";
-
-    // References for needed API identifiers
-    public static final String AQUATEMP_BASE_URL = "https://cloud.linked-go.com/cloudservice/api";
-    public static final String IAM_BASE_URL = "https://cloud.linked-go.com/cloudservice/api";
-    public static final String AQUATEMP_AUTHORIZE_URL = IAM_BASE_URL + "/app/user/login.json";
-
-    public static final URI AQUATEMP_URI = URI.create("http://cloud.linked-go.com");
 
     public static final int API_TIMEOUT_MS = 20000;
     public static final String PROPERTY_ID = "deviceId";
