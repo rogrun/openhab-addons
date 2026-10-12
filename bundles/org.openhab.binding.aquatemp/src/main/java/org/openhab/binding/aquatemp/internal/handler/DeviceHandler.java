@@ -328,6 +328,21 @@ public class DeviceHandler extends AquatempThingHandler {
 
         updateChannelState("consumption", String.valueOf(consumption), Units.WATT.toString());
 
+        updateOptionalQuantityChannel(data, "actual-power", Units.WATT.toString(), "Z04");
+        updateOptionalQuantityChannel(data, "electricity-consumption-per-hour", Units.KILOWATT_HOUR.toString(), "Z07");
+        updateOptionalQuantityChannel(data, "compressor-output-frequency", Units.HERTZ.toString(), "o07");
+        updateOptionalQuantityChannel(data, "compressor-current", Units.AMPERE.toString(), "o08");
+
+        String operatingState = findValueByCode(data, "state_mode");
+        if (!operatingState.isBlank()) {
+            updateState("operating-state", StringType.valueOf(operatingState));
+        }
+
+        String flowSwitch = findValueByCode(data, "S03");
+        if (!flowSwitch.isBlank()) {
+            updateState("flow-switch", "1".equals(flowSwitch) ? OnOffType.ON : OnOffType.OFF);
+        }
+
         updateState("mode", StringType.valueOf(mode));
         currentMode = mode;
         currentTargetTemperature = Float.toString(targetTemperature);
@@ -369,6 +384,17 @@ public class DeviceHandler extends AquatempThingHandler {
         } else {
             DecimalType s = DecimalType.valueOf(stateAsString);
             updateState(channelId, s);
+        }
+    }
+
+    private void updateOptionalQuantityChannel(DataDTO data, String channelId, String unit, String... codes) {
+        String value = findValueByCode(data, codes);
+        if (!value.isBlank()) {
+            try {
+                updateChannelState(channelId, value, unit);
+            } catch (IllegalArgumentException e) {
+                logger.debug("Ignoring invalid value '{}' for channel '{}': {}", value, channelId, e.getMessage());
+            }
         }
     }
 

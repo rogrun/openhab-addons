@@ -31,7 +31,7 @@ public class AquatempBindingConstants {
     public static final ThingTypeUID THING_TYPE_BRIDGE = new ThingTypeUID(BINDING_ID, "bridge");
     public static final ThingTypeUID THING_TYPE_DEVICE = new ThingTypeUID(BINDING_ID, "device");
 
-    public static final int DEVICE_THING_TYPE_VERSION = 2;
+    public static final int DEVICE_THING_TYPE_VERSION = 3;
     public static final int BRIDGE_THING_TYPE_VERSION = 4;
 
     public static final Set<ThingTypeUID> DISCOVERABLE_DEVICE_TYPE_UIDS = Set.of(THING_TYPE_DEVICE);

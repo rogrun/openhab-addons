@@ -106,6 +106,24 @@
 			<channel id="consumption" typeId="power">
 				<label>Consumption</label>
 			</channel>
+			<channel id="actual-power" typeId="power">
+				<label>Actual Power</label>
+			</channel>
+			<channel id="electricity-consumption-per-hour" typeId="energy">
+				<label>Electricity Consumption per Hour</label>
+			</channel>
+			<channel id="compressor-output-frequency" typeId="frequency">
+				<label>Compressor Output Frequency</label>
+			</channel>
+			<channel id="compressor-current" typeId="electric-current">
+				<label>Compressor Current</label>
+			</channel>
+			<channel id="operating-state" typeId="string-read-only">
+				<label>Operating State</label>
+			</channel>
+			<channel id="flow-switch" typeId="boolean-read-only">
+				<label>Flow Switch</label>
+			</channel>
 			<channel id="error-message" typeId="string-read-only">
 				<label>Error message</label>
 			</channel>
@@ -114,7 +132,7 @@
 			</channel>
 		</channels>
 		<properties>
-			<property name="thingTypeVersion">2</property>
+			<property name="thingTypeVersion">3</property>
 		</properties>
 		<representation-property>deviceId</representation-property>
 		<config-description>
@@ -157,6 +175,37 @@
 			<tag>Power</tag>
 		</tags>
 		<state pattern="%d %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="energy">
+		<item-type unitHint="kWh">Number:Energy</item-type>
+		<label>Energy</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+			<tag>Energy</tag>
+		</tags>
+		<state pattern="%.2f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="frequency">
+		<item-type unitHint="Hz">Number:Frequency</item-type>
+		<label>Frequency</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="electric-current">
+		<item-type unitHint="A">Number:ElectricCurrent</item-type>
+		<label>Electric Current</label>
+		<category>Energy</category>
+		<tags>
+			<tag>Measurement</tag>
+		</tags>
+		<state pattern="%.1f %unit%" readOnly="true"/>
 	</channel-type>
 
 	<channel-type id="number">
