@@ -359,9 +359,15 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
         if (this.config.pollingInterval > 0) {
             return this.config.pollingInterval;
         } else {
+            int availableApiCalls = this.config.apiCallLimit - this.config.bufferApiCommands;
+            int activeDevices = Math.max(1, getAllActiveDevices());
+            if (availableApiCalls <= 0) {
+                logger.warn("API call limit ({}) must be greater than the command buffer ({})",
+                        this.config.apiCallLimit, this.config.bufferApiCommands);
+                return pollingInterval;
+            }
 
-            int calculatedInterval = (86400 / (this.config.apiCallLimit - this.config.bufferApiCommands)
-                    * getAllActiveDevices()) + 1;
+            int calculatedInterval = (86400 / availableApiCalls * activeDevices) + 1;
 
             if (calculatedInterval < 60) {
                 calculatedInterval = 60;
@@ -468,18 +474,25 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
     private void startAquatempBridgePolling(Integer pollingIntervalS, Integer initialDelay) {
         ScheduledFuture<?> currentPollingJob = aquatempBridgePollingJob;
         if (currentPollingJob == null) {
+            pollingInterval = pollingIntervalS;
+            updateProperty("pollingInterval [s]", String.valueOf(pollingInterval));
             aquatempBridgePollingJob = scheduler.scheduleWithFixedDelay(() -> {
-                api.checkExpiringToken();
-                checkResetApiCalls();
-                if (!config.disablePolling) {
-                    logger.debug("Refresh job scheduled to run every {} seconds for '{}'", pollingIntervalS,
-                            getThing().getUID());
-                    pollingDevices();
-                    int newPollingInterval = getPollingInterval();
-                    if (newPollingInterval != pollingInterval) {
-                        pollingInterval = newPollingInterval;
-                        updateBridgePollingInterval();
+                try {
+                    api.checkExpiringToken();
+                    checkResetApiCalls();
+                    if (!config.disablePolling) {
+                        logger.debug("Running refresh job scheduled every {} seconds for '{}'", pollingIntervalS,
+                                getThing().getUID());
+                        pollingDevices();
+                        int newPollingInterval = getPollingInterval();
+                        if (newPollingInterval != pollingInterval) {
+                            pollingInterval = newPollingInterval;
+                            updateBridgePollingInterval();
+                        }
                     }
+                } catch (RuntimeException e) {
+                    logger.warn("Unexpected error while polling AquaTemp devices; polling will continue: {}",
+                            e.getMessage(), e);
                 }
             }, initialDelay, pollingIntervalS, TimeUnit.SECONDS);
         }
