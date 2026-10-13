@@ -288,8 +288,8 @@ public class DeviceHandler extends AquatempThingHandler {
         String mode = findValueByCode(data, "Mode");
 
         // Consumption
-        String current = findValueByCode(data, "T07");
-        String voltage = findValueByCode(data, "T14");
+        String current = findValueByCode(data, "T07", "CompressorCurrentDetect");
+        String voltage = findValueByCode(data, "T14", "InverterBoardACInputVoltage");
         if ("1".equals(findValueByCode(data, "Power")) && !current.isBlank() && !voltage.isBlank()) {
             consumption = Float.parseFloat(current) * Float.parseFloat(voltage);
         }
@@ -330,15 +330,17 @@ public class DeviceHandler extends AquatempThingHandler {
 
         updateOptionalQuantityChannel(data, "actual-power", Units.WATT.toString(), "Z04");
         updateOptionalQuantityChannel(data, "electricity-consumption-per-hour", Units.KILOWATT_HOUR.toString(), "Z07");
-        updateOptionalQuantityChannel(data, "compressor-output-frequency", Units.HERTZ.toString(), "o07");
-        updateOptionalQuantityChannel(data, "compressor-current", Units.AMPERE.toString(), "o08");
+        updateOptionalQuantityChannel(data, "compressor-output-frequency", Units.HERTZ.toString(), "O07", "o07",
+                "Sys1CompWorkingFreq");
+        updateOptionalQuantityChannel(data, "compressor-current", Units.AMPERE.toString(), "O08", "o08",
+                "CompressorCurrentDetect");
 
-        String operatingState = findValueByCode(data, "state_mode");
+        String operatingState = findValueByCode(data, "state_mode", "ModeType", "Sys1CompState");
         if (!operatingState.isBlank()) {
             updateState("operating-state", StringType.valueOf(operatingState));
         }
 
-        String flowSwitch = findValueByCode(data, "S03");
+        String flowSwitch = findValueByCode(data, "S03", "WaterFlowSwitch");
         if (!flowSwitch.isBlank()) {
             updateState("flow-switch", "1".equals(flowSwitch) ? OnOffType.ON : OnOffType.OFF);
         }
@@ -398,7 +400,7 @@ public class DeviceHandler extends AquatempThingHandler {
         }
     }
 
-    private String findValueByCode(DataDTO data, String... codes) {
+    static String findValueByCode(DataDTO data, String... codes) {
         for (DataObjectResult dataObjectResult : data.objectResult) {
             for (String code : codes) {
                 if (code.equals(dataObjectResult.code)) {

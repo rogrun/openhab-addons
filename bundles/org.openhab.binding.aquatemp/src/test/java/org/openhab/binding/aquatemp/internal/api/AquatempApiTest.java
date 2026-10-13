@@ -65,11 +65,11 @@ class AquatempApiTest extends JavaTest {
                         "SetTimer1StopMinute", "SetCompType", "Sys1CompWorkingFreq", "SetHeatMaxFreq", "SetCoolMaxFreq",
                         "EnSupportAI", "SetAIMode", "EnAIPower", "CompressorCurrentDetect",
                         "InverterBoardACInputVoltage", "Fault1", "MainBoardSoftwareVer", "MainBoardSoftwareCode",
-                        "DisplaySoftwareVer", "DisplaySoftwareCode"));
+                        "DisplaySoftwareVer", "DisplaySoftwareCode", "Z04", "Z07", "O07", "O08", "state_mode"));
         assertThat(request.getAsJsonArray("bitCodes").asList().stream().map(element -> element.getAsString()).toList(),
                 contains("Sys1HighPressureSwitch", "Sys1LowPressureSwitch", "WaterFlowSwitch", "EmergencySwitch",
                         "ModeSwitch", "Master/SlaveSwitch", "Sys1CompState", "InletWaterTempSensorFault",
-                        "OutletWaterTempSensorFault", "ATSensorFault"));
+                        "OutletWaterTempSensorFault", "ATSensorFault", "S03"));
     }
 
     @Test

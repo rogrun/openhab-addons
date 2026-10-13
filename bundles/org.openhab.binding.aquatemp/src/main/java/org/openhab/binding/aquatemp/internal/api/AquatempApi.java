@@ -71,11 +71,11 @@ public class AquatempApi {
             "SetTimer1StopHour", "SetTimer1StopMinute", "SetCompType", "Sys1CompWorkingFreq", "SetHeatMaxFreq",
             "SetCoolMaxFreq", "EnSupportAI", "SetAIMode", "EnAIPower", "CompressorCurrentDetect",
             "InverterBoardACInputVoltage", "Fault1", "MainBoardSoftwareVer", "MainBoardSoftwareCode",
-            "DisplaySoftwareVer", "DisplaySoftwareCode");
+            "DisplaySoftwareVer", "DisplaySoftwareCode", "Z04", "Z07", "O07", "O08", "state_mode");
 
     private static final List<String> GO_HEATING_BIT_CODES = List.of("Sys1HighPressureSwitch", "Sys1LowPressureSwitch",
             "WaterFlowSwitch", "EmergencySwitch", "ModeSwitch", "Master/SlaveSwitch", "Sys1CompState",
-            "InletWaterTempSensorFault", "OutletWaterTempSensorFault", "ATSensorFault");
+            "InletWaterTempSensorFault", "OutletWaterTempSensorFault", "ATSensorFault", "S03");
 
     public final Properties httpHeaders;
 

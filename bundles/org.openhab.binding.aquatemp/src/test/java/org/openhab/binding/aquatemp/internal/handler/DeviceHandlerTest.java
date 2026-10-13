@@ -17,6 +17,8 @@ import static org.hamcrest.Matchers.is;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.jupiter.api.Test;
+import org.openhab.binding.aquatemp.internal.dto.device.DataDTO;
+import org.openhab.binding.aquatemp.internal.dto.device.DataObjectResult;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorObjectResult;
 import org.openhab.core.test.java.JavaTest;
 
@@ -48,5 +50,17 @@ class DeviceHandlerTest extends JavaTest {
 
         fault.setDescription(null);
         assertThat(DeviceHandler.formatError(fault), is(""));
+    }
+
+    @Test
+    void findsValueUsingGoHeatingAlias() {
+        DataObjectResult result = new DataObjectResult();
+        result.code = "Sys1CompWorkingFreq";
+        result.value = "35";
+        DataDTO data = new DataDTO();
+        data.objectResult = java.util.List.of(result);
+
+        assertThat(DeviceHandler.findValueByCode(data, "O07", "Sys1CompWorkingFreq"), is("35"));
+        assertThat(DeviceHandler.findValueByCode(data, "O08", "CompressorCurrentDetect"), is(""));
     }
 }
