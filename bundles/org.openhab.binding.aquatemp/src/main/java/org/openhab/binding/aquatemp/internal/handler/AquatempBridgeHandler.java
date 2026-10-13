@@ -188,14 +188,16 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
                 return;
             }
             try {
-                getAllDevices();
-                if (!devicesList.isEmpty()) {
+                if (getAllDevices()) {
                     updateBridgeStatus(ThingStatus.ONLINE);
-                    startAquatempBridgePolling(getPollingInterval(), 1);
                 }
             } catch (Exception e) {
                 if (!disposed) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+                }
+            } finally {
+                if (!disposed) {
+                    startAquatempBridgePolling(getPollingInterval(), 1);
                 }
             }
         }, 0, TimeUnit.SECONDS);
@@ -266,7 +268,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
         updateProperty("thingTypeVersion", Integer.toString(BRIDGE_THING_TYPE_VERSION));
     }
 
-    public void getAllDevices() {
+    public boolean getAllDevices() {
         logger.trace("Loading Device List from Aquatemp Bridge");
         try {
             DeviceDTO devices = api.getAllDevices();
@@ -289,6 +291,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
                         logger.trace("Device ID: {} Nickname: {}", deviceId, deviceNickName);
                     }
                 }
+                return true;
             }
         } catch (AquatempCommunicationException e) {
             updateBridgeStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
@@ -296,6 +299,7 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
         } catch (JsonSyntaxException | IllegalStateException e) {
             logger.warn("Parsing Aquatemp response fails: {}", e.getMessage());
         }
+        return false;
     }
 
     public void getDeviceError(DeviceHandler handler) {
@@ -397,7 +401,9 @@ public class AquatempBridgeHandler extends BaseBridgeHandler {
     }
 
     private void pollingDevices() {
-        getAllDevices();
+        if (getAllDevices()) {
+            updateBridgeStatus(ThingStatus.ONLINE);
+        }
         List<Thing> children = getThing().getThings().stream().filter(Thing::isEnabled).toList();
         for (Thing child : children) {
             ThingHandler childHandler = child.getHandler();
