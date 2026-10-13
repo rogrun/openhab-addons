@@ -50,6 +50,7 @@ import org.openhab.core.thing.link.ItemChannelLink;
 import org.openhab.core.thing.link.ItemChannelLinkRegistry;
 import org.openhab.core.thing.type.ChannelTypeUID;
 import org.openhab.core.types.Command;
+import org.openhab.core.types.RefreshType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -200,6 +201,11 @@ public class DeviceHandler extends AquatempThingHandler {
 
     @Override
     public void handleCommand(ChannelUID channelUID, Command command) {
+        if (RefreshType.REFRESH.equals(command)) {
+            initChannelState();
+            return;
+        }
+
         try {
             Channel ch = thing.getChannel(channelUID.getId());
             if (ch != null) {

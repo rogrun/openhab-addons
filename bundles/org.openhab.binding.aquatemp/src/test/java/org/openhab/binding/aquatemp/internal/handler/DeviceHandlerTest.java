@@ -14,13 +14,21 @@ package org.openhab.binding.aquatemp.internal.handler;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
+import static org.mockito.Mockito.mock;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.jupiter.api.Test;
 import org.openhab.binding.aquatemp.internal.dto.device.DataDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.DataObjectResult;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorObjectResult;
+import org.openhab.core.items.ManagedItemProvider;
 import org.openhab.core.test.java.JavaTest;
+import org.openhab.core.thing.ChannelUID;
+import org.openhab.core.thing.Thing;
+import org.openhab.core.thing.link.ItemChannelLinkRegistry;
+import org.openhab.core.types.RefreshType;
 
 /**
  * Tests for API data mappings in {@link DeviceHandler}.
@@ -62,5 +70,21 @@ class DeviceHandlerTest extends JavaTest {
 
         assertThat(DeviceHandler.findValueByCode(data, "O07", "Sys1CompWorkingFreq"), is("35"));
         assertThat(DeviceHandler.findValueByCode(data, "O08", "CompressorCurrentDetect"), is(""));
+    }
+
+    @Test
+    void refreshCommandRequestsCurrentState() {
+        AtomicBoolean refreshed = new AtomicBoolean();
+        DeviceHandler handler = new DeviceHandler(mock(Thing.class), mock(ItemChannelLinkRegistry.class),
+                mock(ManagedItemProvider.class)) {
+            @Override
+            public void initChannelState() {
+                refreshed.set(true);
+            }
+        };
+
+        handler.handleCommand(mock(ChannelUID.class), RefreshType.REFRESH);
+
+        assertThat(refreshed.get(), is(true));
     }
 }
