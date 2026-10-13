@@ -53,15 +53,21 @@ _All configurations are made in the UI_
 
 ### `device`
 
-| channel              | type               | RO/RW | description                     |
-|----------------------|--------------------|-------|---------------------------------|
-| `power-state`        | Switch             | RW    | Power switch                    |
-| `inlet-temperature`  | Number:Temperature | RO    | Water-temperature of the inlet  |
-| `outlet-temperature` | Number:Temperature | RO    | Water-temperature of the outlet |
-| `ambient-temperature` | Number:Temperature | RO    | Ambient-temperature             |
-| `target-temperature` | Number:Temperature | RW    | Target-temperature              |
-| `silent-mode`        | Switch             | RW    | Turns the silent mode on/off    |
-| `mode`               | String             | RW    | Operating mode                  |
-| `consumption`        | Number:Power       | RO    | Current power consumption       |
-| `error-message`      | String             | RO    | Shows the error                 |
-| `error-is-active`    | Switch             | RO    | Error is active                 |
+| channel                            | type               | RO/RW | description                              |
+|------------------------------------|--------------------|-------|------------------------------------------|
+| `power-state`                      | Switch             | RW    | Power switch                             |
+| `inlet-temperature`                | Number:Temperature | RO    | Water temperature of the inlet           |
+| `outlet-temperature`               | Number:Temperature | RO    | Water temperature of the outlet          |
+| `ambient-temperature`              | Number:Temperature | RO    | Ambient temperature                      |
+| `target-temperature`               | Number:Temperature | RW    | Target temperature                       |
+| `silent-mode`                      | Switch             | RW    | Turns the silent mode on/off             |
+| `mode`                             | String             | RW    | Operating mode                           |
+| `consumption`                      | Number:Power       | RO    | Current power consumption                |
+| `actual-power`                     | Number:Power       | RO    | Actual heat pump power                    |
+| `electricity-consumption-per-hour` | Number:Energy      | RO    | Electricity consumption per hour         |
+| `compressor-output-frequency`      | Number:Frequency   | RO    | Compressor output frequency              |
+| `compressor-current`               | Number:ElectricCurrent | RO | Compressor current                       |
+| `operating-state`                  | String             | RO    | Operating state reported by the device   |
+| `flow-switch`                      | Switch             | RO    | Water flow switch state                  |
+| `error-message`                    | String             | RO    | Active device fault message              |
+| `error-is-active`                  | Switch             | RO    | Whether a device fault is active         |
