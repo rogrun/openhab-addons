@@ -50,17 +50,20 @@ public class AquatempHandlerFactory extends BaseThingHandlerFactory {
     private final StorageService storageService;
     private final ItemChannelLinkRegistry linkRegistry;
     private final ManagedItemProvider managedItemProvider;
+    private final AquatempStateDescriptionProvider stateDescriptionProvider;
 
     private static final Set<ThingTypeUID> SUPPORTED_THING_TYPES_UIDS = Set.of(THING_TYPE_BRIDGE, THING_TYPE_DEVICE);
 
     @Activate
     public AquatempHandlerFactory(final @Reference HttpClientFactory httpClientFactory,
             final @Reference StorageService storageService, final @Reference ItemChannelLinkRegistry linkRegistry,
-            final @Reference ManagedItemProvider managedItemProvider) {
+            final @Reference ManagedItemProvider managedItemProvider,
+            final @Reference AquatempStateDescriptionProvider stateDescriptionProvider) {
         this.httpClient = httpClientFactory.getCommonHttpClient();
         this.storageService = storageService;
         this.linkRegistry = linkRegistry;
         this.managedItemProvider = managedItemProvider;
+        this.stateDescriptionProvider = stateDescriptionProvider;
     }
 
     @Override
@@ -77,7 +80,7 @@ public class AquatempHandlerFactory extends BaseThingHandlerFactory {
                     String.class.getClassLoader());
             return new AquatempBridgeHandler((Bridge) thing, storage, httpClient, linkRegistry);
         } else if (THING_TYPE_DEVICE.equals(thingTypeUID)) {
-            return new DeviceHandler(thing, linkRegistry, managedItemProvider);
+            return new DeviceHandler(thing, linkRegistry, managedItemProvider, stateDescriptionProvider);
         }
         return null;
     }

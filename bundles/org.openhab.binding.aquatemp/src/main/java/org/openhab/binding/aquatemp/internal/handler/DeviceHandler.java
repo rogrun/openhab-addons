@@ -14,16 +14,19 @@ package org.openhab.binding.aquatemp.internal.handler;
 
 import static org.openhab.binding.aquatemp.internal.AquatempBindingConstants.*;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.openhab.binding.aquatemp.internal.AquatempStateDescriptionProvider;
 import org.openhab.binding.aquatemp.internal.api.AquatempCommunicationException;
 import org.openhab.binding.aquatemp.internal.config.ThingsConfig;
 import org.openhab.binding.aquatemp.internal.dto.AquatempMessage;
@@ -71,11 +74,14 @@ public class DeviceHandler extends AquatempThingHandler {
 
     private final ItemChannelLinkRegistry linkRegistry;
     private final ManagedItemProvider managedItemProvider;
+    private final AquatempStateDescriptionProvider stateDescriptionProvider;
 
-    public DeviceHandler(Thing thing, ItemChannelLinkRegistry linkRegistry, ManagedItemProvider managedItemProvider) {
+    public DeviceHandler(Thing thing, ItemChannelLinkRegistry linkRegistry, ManagedItemProvider managedItemProvider,
+            AquatempStateDescriptionProvider stateDescriptionProvider) {
         super(thing);
         this.linkRegistry = linkRegistry;
         this.managedItemProvider = managedItemProvider;
+        this.stateDescriptionProvider = stateDescriptionProvider;
     }
 
     @Override
@@ -331,6 +337,7 @@ public class DeviceHandler extends AquatempThingHandler {
         updateChannelState("ambient-temperature", String.valueOf(ambientTemperature), SIUnits.CELSIUS.getSymbol());
 
         updateChannelState("target-temperature", String.valueOf(targetTemperature), SIUnits.CELSIUS.getSymbol());
+        updateTargetTemperatureRange(data, mode);
 
         updateChannelState("consumption", String.valueOf(consumption), Units.WATT.toString());
 
@@ -341,19 +348,73 @@ public class DeviceHandler extends AquatempThingHandler {
         updateOptionalQuantityChannel(data, "compressor-current", Units.AMPERE.toString(), "O08", "o08",
                 "CompressorCurrentDetect");
 
-        String operatingState = findValueByCode(data, "state_mode", "ModeType", "Sys1CompState");
+        String operatingState = formatOperatingState(findValueByCode(data, "state_mode"));
+        if (operatingState.isBlank()) {
+            operatingState = formatOperatingMode(findValueByCode(data, "ModeType"));
+        }
+        if (operatingState.isBlank()) {
+            operatingState = formatCompressorState(findValueByCode(data, "Sys1CompState"));
+        }
         if (!operatingState.isBlank()) {
             updateState("operating-state", StringType.valueOf(operatingState));
         }
 
         String flowSwitch = findValueByCode(data, "S03", "WaterFlowSwitch");
         if (!flowSwitch.isBlank()) {
-            updateState("flow-switch", "1".equals(flowSwitch) ? OnOffType.ON : OnOffType.OFF);
+            updateState("flow-switch", toFlowSwitchState(flowSwitch));
         }
 
         updateState("mode", StringType.valueOf(mode));
         currentMode = mode;
         currentTargetTemperature = Float.toString(targetTemperature);
+    }
+
+    private void updateTargetTemperatureRange(DataDTO data, String mode) {
+        boolean heating = "1".equals(mode);
+        String minimum = findValueByCode(data, heating ? "SetHeatMinTargetTemp" : "SetCoolMinTargetTemp");
+        String maximum = findValueByCode(data, heating ? "SetHeatMaxTargetTemp" : "SetCoolMaxTargetTemp");
+        BigDecimal defaultMinimum = BigDecimal.valueOf(heating ? 6 : 8);
+        BigDecimal defaultMaximum = BigDecimal.valueOf(35);
+        stateDescriptionProvider.setTargetTemperatureRange(new ChannelUID(thing.getUID(), "target-temperature"),
+                parseDecimal(minimum, defaultMinimum), parseDecimal(maximum, defaultMaximum));
+    }
+
+    private static BigDecimal parseDecimal(String value, BigDecimal defaultValue) {
+        try {
+            return value.isBlank() ? defaultValue : new BigDecimal(value);
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    static OnOffType toFlowSwitchState(String value) {
+        return "0".equals(value) ? OnOffType.ON : OnOffType.OFF;
+    }
+
+    static String formatOperatingState(String value) {
+        return switch (value.trim().toLowerCase(Locale.ROOT)) {
+            case "heat", "heating" -> "Heating";
+            case "cool", "cooling" -> "Cooling";
+            case "idle", "standby" -> "Idle";
+            default -> value.trim();
+        };
+    }
+
+    static String formatOperatingMode(String value) {
+        return switch (value.trim()) {
+            case "0" -> "Cooling";
+            case "1" -> "Heating";
+            case "2" -> "Auto";
+            default -> formatOperatingState(value);
+        };
+    }
+
+    static String formatCompressorState(String value) {
+        return switch (value.trim()) {
+            case "0" -> "Idle";
+            case "1" -> "Running";
+            default -> value.trim();
+        };
     }
 
     @Override

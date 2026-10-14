@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.junit.jupiter.api.Test;
+import org.openhab.binding.aquatemp.internal.AquatempStateDescriptionProvider;
 import org.openhab.binding.aquatemp.internal.dto.device.DataDTO;
 import org.openhab.binding.aquatemp.internal.dto.device.DataObjectResult;
 import org.openhab.binding.aquatemp.internal.dto.device.ErrorObjectResult;
@@ -76,7 +77,7 @@ class DeviceHandlerTest extends JavaTest {
     void refreshCommandRequestsCurrentState() {
         AtomicBoolean refreshed = new AtomicBoolean();
         DeviceHandler handler = new DeviceHandler(mock(Thing.class), mock(ItemChannelLinkRegistry.class),
-                mock(ManagedItemProvider.class)) {
+                mock(ManagedItemProvider.class), mock(AquatempStateDescriptionProvider.class)) {
             @Override
             public void initChannelState() {
                 refreshed.set(true);
@@ -86,5 +87,19 @@ class DeviceHandlerTest extends JavaTest {
         handler.handleCommand(mock(ChannelUID.class), RefreshType.REFRESH);
 
         assertThat(refreshed.get(), is(true));
+    }
+
+    @Test
+    void mapsNegativeFlowSwitchLogic() {
+        assertThat(DeviceHandler.toFlowSwitchState("0"), is(org.openhab.core.library.types.OnOffType.ON));
+        assertThat(DeviceHandler.toFlowSwitchState("1"), is(org.openhab.core.library.types.OnOffType.OFF));
+    }
+
+    @Test
+    void formatsOperatingStateValues() {
+        assertThat(DeviceHandler.formatOperatingState("Heat"), is("Heating"));
+        assertThat(DeviceHandler.formatOperatingState("Cool"), is("Cooling"));
+        assertThat(DeviceHandler.formatOperatingMode("1"), is("Heating"));
+        assertThat(DeviceHandler.formatCompressorState("0"), is("Idle"));
     }
 }
