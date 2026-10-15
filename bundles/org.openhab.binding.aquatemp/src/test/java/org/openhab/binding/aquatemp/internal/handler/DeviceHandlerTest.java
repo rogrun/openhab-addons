@@ -99,6 +99,7 @@ class DeviceHandlerTest extends JavaTest {
     void formatsOperatingStateValues() {
         assertThat(DeviceHandler.formatOperatingState("Heat"), is("Heating"));
         assertThat(DeviceHandler.formatOperatingState("Cool"), is("Cooling"));
+        assertThat(DeviceHandler.formatOperatingState("1"), is(""));
         assertThat(DeviceHandler.formatOperatingMode("1"), is("Heating"));
         assertThat(DeviceHandler.formatCompressorState("0"), is("Idle"));
     }

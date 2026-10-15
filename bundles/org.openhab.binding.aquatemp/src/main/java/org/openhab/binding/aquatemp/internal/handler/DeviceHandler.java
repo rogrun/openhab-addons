@@ -392,11 +392,15 @@ public class DeviceHandler extends AquatempThingHandler {
     }
 
     static String formatOperatingState(String value) {
-        return switch (value.trim().toLowerCase(Locale.ROOT)) {
+        String normalizedValue = value.trim();
+        if (normalizedValue.matches("[+-]?\\d+(\\.\\d+)?")) {
+            return "";
+        }
+        return switch (normalizedValue.toLowerCase(Locale.ROOT)) {
             case "heat", "heating" -> "Heating";
             case "cool", "cooling" -> "Cooling";
             case "idle", "standby" -> "Idle";
-            default -> value.trim();
+            default -> normalizedValue;
         };
     }
 
