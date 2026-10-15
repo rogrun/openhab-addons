@@ -39,6 +39,7 @@ import org.openhab.binding.dreame.internal.model.DreameVacuumCapabilities;
 import org.openhab.binding.dreame.internal.model.DreameVacuumProperties;
 import org.openhab.binding.dreame.internal.model.DreameVacuumSetting;
 import org.openhab.binding.dreame.internal.model.DreameVacuumStatus;
+import org.openhab.binding.dreame.internal.util.DreameDeviceMetadata;
 import org.openhab.binding.dreame.internal.util.DreameVacuumDiagnostics;
 import org.openhab.binding.dreame.internal.util.DreameVacuumMapState;
 import org.openhab.core.library.types.RawType;
@@ -123,7 +124,8 @@ public class DreameVacuumHandler extends BaseThingHandler {
         stopMqtt();
         DreameVacuumConfiguration config = getConfigAs(DreameVacuumConfiguration.class);
         if (config.deviceId.isBlank()) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Device ID must be configured");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "@text/offline.configuration-error.device-id");
             return;
         }
         Bridge bridge = getBridge();
@@ -137,29 +139,42 @@ public class DreameVacuumHandler extends BaseThingHandler {
                 logger.trace("Vacuum discovery diagnostics: {}", DreameVacuumDiagnostics.describe(device));
                 if (!supportsMqttDiagnostics(device)) {
                     updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                            "Vacuum model " + device.model() + " is discovered but has no verified protocol mapping");
+                            "@text/offline.configuration-error.vacuum-model");
                     return;
                 }
-                updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "Awaiting valid device status");
+                updateStatus(ThingStatus.UNKNOWN, ThingStatusDetail.NONE, "@text/unknown.awaiting-device-status");
                 int currentGeneration = generation.get();
                 mapApi = account.getVacuumApi();
                 mapDevice = device;
-                mqttJob = scheduler.scheduleWithFixedDelay(() -> maintainMqtt(account, device, currentGeneration), 0,
-                        60, TimeUnit.SECONDS);
-                pollingJob = scheduler.scheduleWithFixedDelay(() -> refreshDevice(account, device, currentGeneration),
-                        0, config.refreshInterval, TimeUnit.SECONDS);
+                updateDeviceMetadata(device);
+                mqttJob = scheduler.scheduleWithFixedDelay(() -> maintainMqtt(account, device.id(), currentGeneration),
+                        0, 60, TimeUnit.SECONDS);
+                pollingJob = scheduler.scheduleWithFixedDelay(
+                        () -> refreshDevice(account, device.id(), currentGeneration), 0, config.refreshInterval,
+                        TimeUnit.SECONDS);
                 return;
             }
         }
         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                "No matching Dreame vacuum found in the account");
+                "@text/offline.configuration-error.vacuum-not-found");
     }
 
     static boolean supportsMqttDiagnostics(DreameDevice device) {
         return DreameVacuumCapabilities.isSupported(device);
     }
 
-    private void refreshDevice(DreameAccountHandler account, DreameDevice device, int currentGeneration) {
+    private void refreshDevice(DreameAccountHandler account, String deviceId, int currentGeneration) {
+        DreameDevice device = account.getVacuumDevice(deviceId);
+        if (device == null) {
+            return;
+        }
+        synchronized (this) {
+            if (!active || generation.get() != currentGeneration) {
+                return;
+            }
+            mapDevice = device;
+            updateDeviceMetadata(device);
+        }
         DreameVacuumApi api = account.getVacuumApi();
         if (api != null) {
             refreshProperties(api, device, currentGeneration);
@@ -190,7 +205,7 @@ public class DreameVacuumHandler extends BaseThingHandler {
                 }
             }
         } catch (DreameCloudException | IllegalArgumentException e) {
-            logger.debug("Vacuum map query failed; retrying in 60 seconds");
+            logger.debug("Vacuum map query failed; retrying on the next refresh");
         } finally {
             synchronized (this) {
                 if (generation.get() == currentGeneration && connectionGeneration == currentConnection) {
@@ -213,7 +228,8 @@ public class DreameVacuumHandler extends BaseThingHandler {
         try {
             DreameVacuumProperties properties = api.getVacuumProperties(device,
                     () -> generation.get() == currentGeneration);
-            Map<String, State> updates = DreameVacuumStatus.channelUpdates(properties);
+            Map<String, State> updates = DreameVacuumStatus.channelUpdates(properties,
+                    DreameVacuumCapabilities.usesNewStateSchema(device));
             if (updates.isEmpty()) {
                 throw new DreameCloudException("Vacuum returned no valid status properties");
             }
@@ -239,9 +255,9 @@ public class DreameVacuumHandler extends BaseThingHandler {
                     consecutiveStatusFailures++;
                     if (consecutiveStatusFailures >= STATUS_FAILURES_BEFORE_OFFLINE) {
                         updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
-                                "Device status query failed; retrying in 60 seconds");
+                                "@text/offline.communication-error.device-status");
                     } else {
-                        logger.debug("Device status query failed once; retrying in 60 seconds");
+                        logger.debug("Device status query failed once; retrying on the next refresh");
                     }
                 }
             }
@@ -252,12 +268,16 @@ public class DreameVacuumHandler extends BaseThingHandler {
                 receiveMapList(currentGeneration, currentConnection, objectName);
             }
         } catch (DreameCloudException | IllegalArgumentException e) {
-            logger.trace("Vacuum saved-map reference query failed; retrying in 60 seconds");
+            logger.trace("Vacuum saved-map reference query failed; retrying on the next refresh");
         }
     }
 
-    private void maintainMqtt(DreameAccountHandler account, DreameDevice device, int currentGeneration) {
+    private void maintainMqtt(DreameAccountHandler account, String deviceId, int currentGeneration) {
         if (generation.get() != currentGeneration) {
+            return;
+        }
+        DreameDevice device = account.getVacuumDevice(deviceId);
+        if (device == null) {
             return;
         }
         try {
@@ -276,6 +296,7 @@ public class DreameVacuumHandler extends BaseThingHandler {
                 }
                 currentConnection = ++connectionGeneration;
                 clearStates();
+                mapDevice = device;
                 previous = current;
                 mqttClient = null;
                 mqttConfiguration = null;
@@ -310,6 +331,13 @@ public class DreameVacuumHandler extends BaseThingHandler {
             if (generation.get() == currentGeneration) {
                 logger.debug("Vacuum MQTT setup failed; retrying in 60 seconds");
             }
+        }
+    }
+
+    private void updateDeviceMetadata(DreameDevice device) {
+        Map<String, String> properties = editProperties();
+        if (DreameDeviceMetadata.updateProperties(properties, device)) {
+            updateProperties(properties);
         }
     }
 
@@ -552,7 +580,9 @@ public class DreameVacuumHandler extends BaseThingHandler {
         if (!active || generation.get() != currentGeneration || connectionGeneration != currentConnection) {
             return;
         }
-        Map<String, State> updates = DreameVacuumStatus.channelUpdates(properties);
+        DreameDevice device = mapDevice;
+        Map<String, State> updates = DreameVacuumStatus.channelUpdates(properties,
+                device == null || DreameVacuumCapabilities.usesNewStateSchema(device));
         availableProperties.addAll(properties.keySet());
         if (!updates.isEmpty()) {
             updates.forEach(this::publishState);

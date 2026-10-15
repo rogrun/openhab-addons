@@ -49,6 +49,7 @@ import org.openhab.binding.dreame.internal.model.DreameMowingStatistics;
 import org.openhab.binding.dreame.internal.model.DreameMqttConfiguration;
 import org.openhab.binding.dreame.internal.model.DreameProperty;
 import org.openhab.binding.dreame.internal.model.DreameStatus;
+import org.openhab.binding.dreame.internal.util.DreameDeviceMetadata;
 import org.openhab.binding.dreame.internal.util.DreameDiagnostics;
 import org.openhab.binding.dreame.internal.util.DreameMapPngRenderer;
 import org.openhab.binding.dreame.internal.util.DreameMapSvgRenderer;
@@ -130,13 +131,14 @@ public class DreameMowerHandler extends BaseThingHandler {
         active = true;
         config = getConfigAs(DreameMowerConfiguration.class);
         if (config.deviceId.isBlank()) {
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR, "Device ID must be configured");
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
+                    "@text/offline.configuration-error.device-id");
             return;
         }
         Bridge bridge = getBridge();
         if (bridge == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "The mower must be attached to a Dreame account bridge");
+                    "@text/offline.configuration-error.mower-bridge");
             return;
         }
         bridgeStatusChanged(bridge.getStatusInfo());
@@ -191,7 +193,8 @@ public class DreameMowerHandler extends BaseThingHandler {
         } catch (DreameCloudException | IllegalArgumentException e) {
             logger.debug("Cloud command failed for device {}: {}", DreameDiagnostics.maskIdentifier(device.id()),
                     e.getMessage(), e);
-            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+            updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                    "@text/offline.communication-error.command");
         }
     }
 
@@ -279,7 +282,7 @@ public class DreameMowerHandler extends BaseThingHandler {
         DreameDevice device = device(account);
         if (account == null || device == null) {
             updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.CONFIGURATION_ERROR,
-                    "Device ID was not found in the Dreamehome account");
+                    "@text/offline.configuration-error.mower-not-found");
             return;
         }
         try {
@@ -290,7 +293,7 @@ public class DreameMowerHandler extends BaseThingHandler {
             updateStatusChannels(status, pollRevision);
             refreshStatistics(account, device);
             refreshMapData(account, device);
-            updateState(CHANNEL_FIRMWARE, new StringType(device.version()));
+            updateDeviceMetadata(device);
             consecutivePollingFailures.set(0);
             updateStatus(ThingStatus.ONLINE);
             ensureMqtt(account, device);
@@ -299,11 +302,22 @@ public class DreameMowerHandler extends BaseThingHandler {
             logger.debug("Cloud polling failed for device {}: {}", DreameDiagnostics.maskIdentifier(device.id()),
                     e.getMessage(), e);
             if (failures >= POLLING_FAILURE_THRESHOLD) {
-                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR, e.getMessage());
+                updateStatus(ThingStatus.OFFLINE, ThingStatusDetail.COMMUNICATION_ERROR,
+                        "@text/offline.communication-error.device-status");
             } else {
                 logger.debug("Tolerating cloud polling failure {} of {} for device {}; MQTT connected={}", failures,
                         POLLING_FAILURE_THRESHOLD, DreameDiagnostics.maskIdentifier(device.id()), isMqttConnected());
             }
+        }
+    }
+
+    private void updateDeviceMetadata(DreameDevice device) {
+        if (!device.version().isBlank()) {
+            updateState(CHANNEL_FIRMWARE, new StringType(device.version()));
+        }
+        Map<String, String> properties = editProperties();
+        if (DreameDeviceMetadata.updateProperties(properties, device)) {
+            updateProperties(properties);
         }
     }
 

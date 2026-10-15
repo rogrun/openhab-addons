@@ -98,7 +98,7 @@ public final class DreameVacuumDiagnostics {
         }
     }
 
-    /** Returns only validated numeric property updates for the tested vacuum model. */
+    /** Returns only validated numeric property updates for mapped vacuum models. */
     public static Map<String, Integer> readProperties(byte[] payload, String model) {
         if (!isSupportedModel(model) || payload.length == 0 || payload.length > MAX_BYTES) {
             return Map.of();

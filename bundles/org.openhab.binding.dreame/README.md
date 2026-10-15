@@ -70,7 +70,8 @@ Every 60 seconds the binding checks the subscription and refreshes account crede
 Failed connections are replaced, and changes to credentials cause the subscription to be recreated.
 Disabling the Thing or taking its bridge offline stops the subscription and retry task.
 
-The binding queries the supported status and setting properties on initialization and every 60 seconds through the cloud HTTP API.
+The binding queries the supported status and setting properties on initialization and at the configured
+`refreshInterval` through the cloud HTTP API (60 seconds by default).
 A failed query sets the Thing to `OFFLINE` unless a newer valid push arrived during that query; the next valid update restores `ONLINE`.
 Community testing confirmed ONLINE status, periodic property queries, MQTT updates and continued operation of the
 supported commands and settings on the L50 Ultra Pro.
@@ -81,7 +82,7 @@ Explicit control commands and setting changes also use the cloud HTTP API; MQTT 
 | Channel | Item type | Access | Meaning |
 |---------|-----------|--------|---------|
 | `command` | String | RW | Send a cleaning, dock or station command; retains the last acknowledged command |
-| `battery-level` | Number | R | Last reported battery percentage (0–100) |
+| `battery-level` | Number:Dimensionless | R | Last reported battery percentage (0–100) |
 | `state` | String | R | Device state, including cleaning, mopping, docking, washing, drying and maintenance transitions |
 | `operating-status` | String | R | Operating status, including cleaning, mapping, remote-control and monitoring activities |
 | `charging-status` | String | R | `NOT_CHARGING`, `RETURNING`, `CHARGING`, `CHARGING_COMPLETED` |
@@ -117,10 +118,12 @@ Explicit control commands and setting changes also use the cloud HTTP API; MQTT 
 | `map-svg` | Image | R | Rendered vector SVG map |
 
 Unknown state codes are preserved as `UNKNOWN_<code>`.
-Device-state codes 19 and above differ between older and newer Dreame protocol variants. The binding names the values
-confirmed for the L50 protocol and preserves every other value as `UNKNOWN_<code>`. State codes 13 and 22 follow the
-[reference state mapping](https://github.com/Tasshack/dreame-vacuum/blob/dev/custom_components/dreame_vacuum/dreame/types.py),
-and community testing confirmed auto-emptying for code 22 after docking.
+Device-state codes 19 and above differ between older and newer Dreame protocol variants. The binding selects the state
+schema from the model and, for transitional models, the firmware build using the `NEW_STATE` capability in the
+[reference device database](https://github.com/Tasshack/dreame-vacuum/blob/8556ef85132c3d73a5288dd00738636392dac633/custom_components/dreame_vacuum/dreame/const.py).
+The corresponding old and new state tables follow the
+[reference state mapping](https://github.com/Tasshack/dreame-vacuum/blob/8556ef85132c3d73a5288dd00738636392dac633/custom_components/dreame_vacuum/dreame/types.py).
+Unknown models use the new schema, while unmapped values remain visible as `UNKNOWN_<code>`.
 Values are updated independently as MQTT properties or query results arrive; missing or failed properties do not overwrite other channels.
 A query does not overwrite a newer push received for the same channel while the query was running.
 Channels remain `UNDEF` until their first valid update and are cleared when the subscription is replaced or the Thing/bridge is stopped.
@@ -184,6 +187,8 @@ A manual inbox scan can be used to repeat discovery.
 
 European country codes such as `de`, `fr` or `nl` are routed to the selected service's European cloud.
 The minimum refresh interval is 15 seconds. MQTT continues to deliver immediate updates independently of this interval.
+The account bridge refreshes cloud device metadata every 15 minutes. The binding stores the current model and firmware
+version as Thing properties and uses them when selecting firmware-dependent vacuum state mappings.
 
 ## Channels
 
@@ -407,9 +412,10 @@ The vacuum model identifiers are derived from the MIT-licensed
 [foXaCe/dreame-vacuum device database](https://github.com/foXaCe/dreame-vacuum/tree/d32732d1175d9b3e90e5f8f38651370effea8fe0),
 as documented in the binding's `NOTICE` file.
 
-The latest L50 test confirms `DRYING` and `SLEEPING` and observes state codes 9, 12 and 20 during a mop session.
-These map to `WASHING`, `SWEEPING_AND_MOPPING` and `CLEAN_ADD_WATER`, following the reference state enumeration.
-The tester directly identified code 9 as mop washing; code 20 still needs confirmation against the physical operation.
+Physical testing with the L50 Ultra Pro confirmed `DRYING` and `SLEEPING` and observed state codes 9, 12 and 20 during
+a mop session. These map to `WASHING`, `SWEEPING_AND_MOPPING` and `CLEAN_ADD_WATER`, following the reference state
+enumeration. Code 9 was directly identified as mop washing; the physical operation represented by code 20 still needs
+independent confirmation.
 
 ### Vacuum map
 
