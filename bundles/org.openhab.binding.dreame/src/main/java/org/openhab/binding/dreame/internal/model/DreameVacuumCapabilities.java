@@ -325,6 +325,7 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r510a
             dreame.vacuum.r5117
             dreame.vacuum.r5345b
+            dreame.vacuum.r6001a
             dreame.vacuum.r9301
             dreame.vacuum.r9302
             dreame.vacuum.r9304
