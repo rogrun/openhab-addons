@@ -41,7 +41,18 @@ public final class DreameVacuumStatus {
             "cleaning-mode", "base-status", "drying-time", "clean-genius", "cleaning-route", "main-brush-left",
             "main-brush-time-left", "side-brush-left", "side-brush-time-left", "filter-left", "filter-time-left",
             "sensor-dirty-left", "sensor-dirty-time-left", "mop-pad-left", "mop-pad-time-left", "detergent-left",
-            "detergent-time-left", "total-cleaning-time", "cleaning-count", "total-cleaned-area");
+            "detergent-time-left", "total-cleaning-time", "cleaning-count", "total-cleaned-area", "relocation-status",
+            "low-water-warning", "task-type", "drainage-status", "cleaning-progress", "drying-progress",
+            "tank-filter-left", "tank-filter-time-left", "silver-ion-left", "silver-ion-time-left", "squeegee-left",
+            "squeegee-time-left", "dirty-water-channel-left", "dirty-water-channel-time-left",
+            "onboard-dirty-water-tank-left", "onboard-dirty-water-tank-time-left", "clean-water-tank-status",
+            "dirty-water-tank-status", "dust-bag-status", "detergent-status", "station-drainage-status",
+            "hot-water-status", "dust-bag-drying-status", "roller-cover-status", "washboard-cleaning-status",
+            "deodorizer-left", "deodorizer-time-left", "wheel-dirty-left", "wheel-dirty-time-left", "water-tank-status",
+            "scale-inhibitor-left", "scale-inhibitor-time-left", "fluffing-roller-left", "fluffing-roller-time-left",
+            "roller-mop-filter-left", "roller-mop-filter-time-left", "water-outlet-filter-left",
+            "water-outlet-filter-time-left", "washboard-cleaning-left", "washboard-cleaning-time-left",
+            "filter-cleaning-left", "filter-cleaning-time-left");
 
     private DreameVacuumStatus() {
     }
@@ -153,6 +164,102 @@ public final class DreameVacuumStatus {
                 case "18/2" -> updates.put("mop-pad-time-left", new QuantityType<>(value, Units.HOUR));
                 case "20/1" -> updates.put("detergent-left", new QuantityType<>(value, Units.PERCENT));
                 case "20/2" -> updates.put("detergent-time-left", new QuantityType<>(value, Units.DAY));
+                case "4/20" -> updates.put("relocation-status", new StringType(switch (value) {
+                    case 0 -> "LOCATED";
+                    case 1 -> "LOCATING";
+                    case 10 -> "FAILED";
+                    case 11 -> "SUCCESS";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "4/41" -> updates.put("low-water-warning", new StringType(switch (value) {
+                    case 0 -> "NO_WARNING";
+                    case 1 -> "NO_WATER_LEFT_DISMISS";
+                    case 2 -> "NO_WATER_LEFT";
+                    case 3 -> "NO_WATER_LEFT_AFTER_CLEAN";
+                    case 4 -> "NO_WATER_FOR_CLEAN";
+                    case 5 -> "LOW_WATER";
+                    case 6 -> "TANK_NOT_INSTALLED";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "4/58" -> updates.put("task-type", new StringType(taskType(value)));
+                case "4/60" -> updates.put("drainage-status", new StringType(switch (value) {
+                    case 0 -> "IDLE";
+                    case 1 -> "DRAINING";
+                    case 2 -> "DRAINING_SUCCESS";
+                    case 3 -> "DRAINING_FAILED";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "4/63" -> updates.put("cleaning-progress", new QuantityType<>(value, Units.PERCENT));
+                case "4/64" -> updates.put("drying-progress", new QuantityType<>(value, Units.PERCENT));
+                case "17/1" -> updates.put("tank-filter-left", new QuantityType<>(value, Units.PERCENT));
+                case "17/2" -> updates.put("tank-filter-time-left", new QuantityType<>(value, Units.HOUR));
+                case "19/1" -> updates.put("silver-ion-time-left", new QuantityType<>(value, Units.DAY));
+                case "19/2" -> updates.put("silver-ion-left", new QuantityType<>(value, Units.PERCENT));
+                case "24/1" -> updates.put("squeegee-time-left", new QuantityType<>(value, Units.HOUR));
+                case "24/2" -> updates.put("squeegee-left", new QuantityType<>(value, Units.PERCENT));
+                case "25/1" -> updates.put("dirty-water-channel-time-left", new QuantityType<>(value, Units.HOUR));
+                case "25/2" -> updates.put("dirty-water-channel-left", new QuantityType<>(value, Units.PERCENT));
+                case "26/1" -> updates.put("onboard-dirty-water-tank-time-left", new QuantityType<>(value, Units.HOUR));
+                case "26/2" -> updates.put("onboard-dirty-water-tank-left", new QuantityType<>(value, Units.PERCENT));
+                case "27/1" -> updates.put("clean-water-tank-status", new StringType(switch (value) {
+                    case 0 -> "INSTALLED";
+                    case 1 -> "NOT_INSTALLED";
+                    case 2 -> "LOW_WATER";
+                    case 3 -> "CHECKING";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "27/2" -> updates.put("dirty-water-tank-status", new StringType(switch (value) {
+                    case 0 -> "INSTALLED";
+                    case 1 -> "NOT_INSTALLED_OR_FULL";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "27/3" -> updates.put("dust-bag-status", new StringType(switch (value) {
+                    case 0 -> "INSTALLED";
+                    case 1 -> "NOT_INSTALLED";
+                    case 2 -> "CHECK";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "27/4" -> updates.put("detergent-status", new StringType(switch (value) {
+                    case 0 -> "INSTALLED";
+                    case 1 -> "DISABLED";
+                    case 2 -> "LOW_DETERGENT";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "27/5" -> updates.put("station-drainage-status", new StringType(switch (value) {
+                    case 0 -> "IDLE";
+                    case 1 -> "DRAINING";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "27/9" -> updates.put("water-tank-status", new DecimalType(value));
+                case "27/15" -> updates.put("hot-water-status", new StringType(switch (value) {
+                    case 0 -> "DISABLED";
+                    case 1 -> "ENABLED";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "27/18" -> updates.put("dust-bag-drying-status", new StringType(switch (value) {
+                    case 0 -> "IDLE";
+                    case 1 -> "DRYING";
+                    case 2 -> "PAUSED";
+                    default -> "UNKNOWN_" + value;
+                }));
+                case "27/26" -> updates.put("roller-cover-status", new DecimalType(value));
+                case "27/27" -> updates.put("washboard-cleaning-status", new DecimalType(value));
+                case "29/1" -> updates.put("deodorizer-time-left", new QuantityType<>(value, Units.DAY));
+                case "29/2" -> updates.put("deodorizer-left", new QuantityType<>(value, Units.PERCENT));
+                case "30/1" -> updates.put("wheel-dirty-time-left", new QuantityType<>(value, Units.HOUR));
+                case "30/2" -> updates.put("wheel-dirty-left", new QuantityType<>(value, Units.PERCENT));
+                case "31/1" -> updates.put("scale-inhibitor-time-left", new QuantityType<>(value, Units.DAY));
+                case "31/2" -> updates.put("scale-inhibitor-left", new QuantityType<>(value, Units.PERCENT));
+                case "32/1" -> updates.put("fluffing-roller-time-left", new QuantityType<>(value, Units.HOUR));
+                case "32/2" -> updates.put("fluffing-roller-left", new QuantityType<>(value, Units.PERCENT));
+                case "33/1" -> updates.put("roller-mop-filter-time-left", new QuantityType<>(value, Units.HOUR));
+                case "33/2" -> updates.put("roller-mop-filter-left", new QuantityType<>(value, Units.PERCENT));
+                case "35/1" -> updates.put("water-outlet-filter-time-left", new QuantityType<>(value, Units.HOUR));
+                case "35/2" -> updates.put("water-outlet-filter-left", new QuantityType<>(value, Units.PERCENT));
+                case "37/1" -> updates.put("washboard-cleaning-time-left", new QuantityType<>(value, Units.DAY));
+                case "37/2" -> updates.put("washboard-cleaning-left", new QuantityType<>(value, Units.PERCENT));
+                case "38/1" -> updates.put("filter-cleaning-time-left", new QuantityType<>(value, Units.HOUR));
+                case "38/2" -> updates.put("filter-cleaning-left", new QuantityType<>(value, Units.PERCENT));
                 case "2/1" -> updates.put("state", new StringType(state(value, newStateSchema)));
                 case "4/1" -> updates.put("operating-status", new StringType(switch (value) {
                     case 0 -> "IDLE";
@@ -225,6 +332,51 @@ public final class DreameVacuumStatus {
             case 17 -> "RETURNING_INSTALL_MOP";
             case 18 -> "RETURNING_REMOVE_MOP";
             default -> newStateSchema ? newState(value) : oldState(value);
+        };
+    }
+
+    private static String taskType(int value) {
+        return switch (value) {
+            case 0 -> "IDLE";
+            case 1 -> "STANDARD";
+            case 2 -> "STANDARD_PAUSED";
+            case 3 -> "CUSTOM";
+            case 4 -> "CUSTOM_PAUSED";
+            case 5 -> "SHORTCUT";
+            case 6 -> "SHORTCUT_PAUSED";
+            case 7 -> "SCHEDULED";
+            case 8 -> "SCHEDULED_PAUSED";
+            case 9 -> "SMART";
+            case 10 -> "SMART_PAUSED";
+            case 11 -> "PARTIAL";
+            case 12 -> "PARTIAL_PAUSED";
+            case 13 -> "SUMMON";
+            case 14 -> "SUMMON_PAUSED";
+            case 15 -> "WATER_STAIN";
+            case 16 -> "WATER_STAIN_PAUSED";
+            case 17 -> "BOOSTED_EDGE_CLEANING";
+            case 18 -> "HAIR_COMPRESSING";
+            case 19 -> "LARGE_PARTICLE_CLEANING";
+            case 20 -> "INTENSIVE_STAIN_CLEANING";
+            case 21 -> "STAIN_CLEANING";
+            case 22 -> "INITIAL_DEEP_CLEANING";
+            case 23 -> "INITIAL_DEEP_CLEANING_PAUSED";
+            case 24 -> "MOP_PAD_HEATING";
+            case 25 -> "CLEANING_AFTER_MAPPING";
+            case 26 -> "SMALL_PARTICLE_CLEANING";
+            case 30 -> "CHANGING_MOP";
+            case 31 -> "CHANGING_MOP_PAUSED";
+            case 32 -> "FLOOR_MAINTAINING";
+            case 33 -> "FLOOR_MAINTAINING_PAUSED";
+            case 34 -> "ARRANGING_ITEMS";
+            case 35 -> "ARRANGING_ITEMS_PAUSED";
+            case 36 -> "INTENSIVE_HAIR_CLEANING";
+            case 37 -> "ACCESSORY_HANDLING";
+            case 38 -> "INCREASED_DRUM_SPEED_CLEANING";
+            case 39 -> "PRESSURIZED_CLEANING";
+            case 40 -> "STEAM_CLEANING";
+            case 41 -> "STEAM_CLEANING_PAUSED";
+            default -> "UNKNOWN_" + value;
         };
     }
 

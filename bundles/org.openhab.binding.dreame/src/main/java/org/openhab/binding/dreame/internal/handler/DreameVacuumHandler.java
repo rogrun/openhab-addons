@@ -224,6 +224,11 @@ public class DreameVacuumHandler extends BaseThingHandler {
         try {
             DreameVacuumProperties properties = account.getVacuumProperties(device,
                     () -> generation.get() == currentGeneration);
+            String statusDiagnostics = DreameVacuumDiagnostics.describeStatusProperties(properties.numeric());
+            if (!"[]".equals(statusDiagnostics)) {
+                logger.trace("Vacuum property query diagnostics: model={}, statusProperties={}", device.model(),
+                        statusDiagnostics);
+            }
             Map<String, State> updates = DreameVacuumStatus.channelUpdates(properties,
                     DreameVacuumCapabilities.usesNewStateSchema(device),
                     DreameVacuumCapabilities.usesReversedCleaningMode(device,

@@ -79,43 +79,75 @@ Explicit control commands and setting changes also use the cloud HTTP API; MQTT 
 
 ### Vacuum Channels
 
-| Channel | Item type | Access | Meaning |
-|---------|-----------|--------|---------|
-| `command` | String | RW | Send a cleaning, dock or station command; retains the last acknowledged command |
-| `battery-level` | Number:Dimensionless | R | Last reported battery percentage (0–100) |
-| `state` | String | R | Device state, including cleaning, mopping, docking, washing, drying and maintenance transitions |
-| `operating-status` | String | R | Operating status, including cleaning, mapping, remote-control and monitoring activities |
-| `charging-status` | String | R | `NOT_CHARGING`, `RETURNING`, `CHARGING`, `CHARGING_COMPLETED` |
-| `error-code` | Number | R | Raw numeric error code; 0 was observed during normal cleaning |
-| `cleaning-time` | Number:Time | R | Elapsed cleaning time in minutes |
-| `cleaned-area` | Number:Area | R | Area cleaned during the current task in square metres |
-| `suction-level` | String | RW | Suction level: `QUIET`, `STANDARD`, `STRONG`, `TURBO` |
-| `water-volume` | String | RW | Water volume: `LOW`, `MEDIUM`, `HIGH` |
-| `task-status` | String | R | Current task, including automatic, room and zone cleaning and their paused variants |
-| `cleaning-mode` | String | RW | Cleaning mode: `SWEEPING`, `MOPPING`, `SWEEPING_AND_MOPPING` |
-| `clean-genius` | String | RW | CleanGenius mode: `OFF`, `ROUTINE`, `DEEP` |
-| `cleaning-route` | String | RW | Cleaning route: `STANDARD`, `QUICK` |
-| `drying-time` | String | RW | Mop drying time: `2H`, `3H`, `4H` |
-| `main-brush-left` | Number:Dimensionless | R | Main brush service life remaining in percent |
-| `main-brush-time-left` | Number:Time | R | Main brush service time remaining in hours |
-| `side-brush-left` | Number:Dimensionless | R | Side brush service life remaining in percent |
-| `side-brush-time-left` | Number:Time | R | Side brush service time remaining in hours |
-| `filter-left` | Number:Dimensionless | R | Filter service life remaining in percent |
-| `filter-time-left` | Number:Time | R | Filter service time remaining in hours |
-| `sensor-dirty-left` | Number:Dimensionless | R | Remaining sensor-cleaning interval in percent |
-| `sensor-dirty-time-left` | Number:Time | R | Remaining sensor-cleaning interval in hours |
-| `mop-pad-left` | Number:Dimensionless | R | Mop pad service life remaining in percent |
-| `mop-pad-time-left` | Number:Time | R | Mop pad service time remaining in hours |
-| `detergent-left` | Number:Dimensionless | R | Detergent supply remaining in percent |
-| `detergent-time-left` | Number:Time | R | Estimated detergent supply remaining in days |
-| `total-cleaning-time` | Number:Time | R | Total cleaning time in minutes |
-| `cleaning-count` | Number | R | Total number of cleaning jobs |
-| `total-cleaned-area` | Number:Area | R | Total cleaned area in square metres |
-| `base-status` | String | R | Mop washing and drying station state |
-| `rooms` | String | R | Room segment IDs and names from the current map, for example `3=Kitchen, 7=Living Room` |
-| `room-cleaning` | String | RW | Comma-separated room IDs, for example `3,7`; retains the last acknowledged selection |
-| `map-png` | Image | R | Rendered PNG map for Basic UI and clients without reliable SVG support |
-| `map-svg` | Image | R | Rendered vector SVG map |
+| Channel                                                                | Item type                          | Access | Meaning                                                                                         |
+| ---------------------------------------------------------------------- | ---------------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| `command`                                                              | String                             | RW     | Send a cleaning, dock or station command; retains the last acknowledged command                 |
+| `battery-level`                                                        | Number:Dimensionless               | R      | Last reported battery percentage (0–100)                                                        |
+| `state`                                                                | String                             | R      | Device state, including cleaning, mopping, docking, washing, drying and maintenance transitions |
+| `operating-status`                                                     | String                             | R      | Operating status, including cleaning, mapping, remote-control and monitoring activities         |
+| `charging-status`                                                      | String                             | R      | `NOT_CHARGING`, `RETURNING`, `CHARGING`, `CHARGING_COMPLETED`                                   |
+| `error-code`                                                           | Number                             | R      | Raw numeric error code; 0 was observed during normal cleaning                                   |
+| `cleaning-time`                                                        | Number:Time                        | R      | Elapsed cleaning time in minutes                                                                |
+| `cleaned-area`                                                         | Number:Area                        | R      | Area cleaned during the current task in square metres                                           |
+| `suction-level`                                                        | String                             | RW     | Suction level: `QUIET`, `STANDARD`, `STRONG`, `TURBO`                                           |
+| `water-volume`                                                         | String                             | RW     | Water volume: `LOW`, `MEDIUM`, `HIGH`                                                           |
+| `task-status`                                                          | String                             | R      | Current task, including automatic, room and zone cleaning and their paused variants             |
+| `cleaning-mode`                                                        | String                             | RW     | Cleaning mode: `SWEEPING`, `MOPPING`, `SWEEPING_AND_MOPPING`                                    |
+| `clean-genius`                                                         | String                             | RW     | CleanGenius mode: `OFF`, `ROUTINE`, `DEEP`                                                      |
+| `cleaning-route`                                                       | String                             | RW     | Cleaning route: `STANDARD`, `QUICK`                                                             |
+| `drying-time`                                                          | String                             | RW     | Mop drying time: `2H`, `3H`, `4H`                                                               |
+| `main-brush-left`                                                      | Number:Dimensionless               | R      | Main brush service life remaining in percent                                                    |
+| `main-brush-time-left`                                                 | Number:Time                        | R      | Main brush service time remaining in hours                                                      |
+| `side-brush-left`                                                      | Number:Dimensionless               | R      | Side brush service life remaining in percent                                                    |
+| `side-brush-time-left`                                                 | Number:Time                        | R      | Side brush service time remaining in hours                                                      |
+| `filter-left`                                                          | Number:Dimensionless               | R      | Filter service life remaining in percent                                                        |
+| `filter-time-left`                                                     | Number:Time                        | R      | Filter service time remaining in hours                                                          |
+| `sensor-dirty-left`                                                    | Number:Dimensionless               | R      | Remaining sensor-cleaning interval in percent                                                   |
+| `sensor-dirty-time-left`                                               | Number:Time                        | R      | Remaining sensor-cleaning interval in hours                                                     |
+| `mop-pad-left`                                                         | Number:Dimensionless               | R      | Mop pad service life remaining in percent                                                       |
+| `mop-pad-time-left`                                                    | Number:Time                        | R      | Mop pad service time remaining in hours                                                         |
+| `detergent-left`                                                       | Number:Dimensionless               | R      | Detergent supply remaining in percent                                                           |
+| `detergent-time-left`                                                  | Number:Time                        | R      | Estimated detergent supply remaining in days                                                    |
+| `total-cleaning-time`                                                  | Number:Time                        | R      | Total cleaning time in minutes                                                                  |
+| `cleaning-count`                                                       | Number                             | R      | Total number of cleaning jobs                                                                   |
+| `total-cleaned-area`                                                   | Number:Area                        | R      | Total cleaned area in square metres                                                             |
+| `base-status`                                                          | String                             | R      | Mop washing and drying station state                                                            |
+| `cleaning-progress`                                                    | Number:Dimensionless               | R      | Cleaning progress in percent, when reported by the vacuum                                       |
+| `drying-progress`                                                      | Number:Dimensionless               | R      | Mop drying progress in percent, when reported by the station                                    |
+| `relocation-status`                                                    | String                             | R      | `LOCATED`, `LOCATING`, `FAILED` or `SUCCESS`                                                   |
+| `task-type`                                                            | String                             | R      | Named current task type, including cleaning and mop-maintenance tasks                            |
+| `low-water-warning`                                                    | String                             | R      | Named water warning, including `LOW_WATER` and `TANK_NOT_INSTALLED`                             |
+| `drainage-status`                                                      | String                             | R      | Named base drainage state                                                                       |
+| `clean-water-tank-status`                                              | String                             | R      | `INSTALLED`, `NOT_INSTALLED`, `LOW_WATER` or `CHECKING`                                        |
+| `dirty-water-tank-status`                                              | String                             | R      | `INSTALLED` or `NOT_INSTALLED_OR_FULL`                                                          |
+| `dust-bag-status`                                                      | String                             | R      | `INSTALLED`, `NOT_INSTALLED` or `CHECK`                                                        |
+| `detergent-status`                                                     | String                             | R      | `INSTALLED`, `DISABLED` or `LOW_DETERGENT`                                                     |
+| `station-drainage-status`                                              | String                             | R      | `IDLE` or `DRAINING`                                                                            |
+| `water-tank-status`                                                    | Number                             | R      | Raw onboard water tank status code                                                              |
+| `hot-water-status`                                                     | String                             | R      | `DISABLED` or `ENABLED`                                                                         |
+| `dust-bag-drying-status`                                               | String                             | R      | `IDLE`, `DRYING` or `PAUSED`                                                                    |
+| `roller-cover-status`                                                  | Number                             | R      | Raw roller cover status code                                                                    |
+| `washboard-cleaning-status`                                            | Number                             | R      | Raw washboard cleaning status code                                                              |
+| `tank-filter-left` / `tank-filter-time-left`                           | Number:Dimensionless / Number:Time | R      | Tank filter remaining life (percent) and time (hours)                                           |
+| `silver-ion-left` / `silver-ion-time-left`                             | Number:Dimensionless / Number:Time | R      | Silver ion module remaining life (percent) and time (days)                                      |
+| `squeegee-left` / `squeegee-time-left`                                 | Number:Dimensionless / Number:Time | R      | Squeegee remaining life (percent) and time (hours)                                              |
+| `dirty-water-channel-left` / `dirty-water-channel-time-left`           | Number:Dimensionless / Number:Time | R      | Dirty water channel remaining life (percent) and time (hours)                                   |
+| `onboard-dirty-water-tank-left` / `onboard-dirty-water-tank-time-left` | Number:Dimensionless / Number:Time | R      | Onboard dirty water tank remaining life (percent) and time (hours)                              |
+| `deodorizer-left` / `deodorizer-time-left`                             | Number:Dimensionless / Number:Time | R      | Deodorizer remaining life (percent) and time (days)                                             |
+| `wheel-dirty-left` / `wheel-dirty-time-left`                           | Number:Dimensionless / Number:Time | R      | Wheel cleaning interval remaining (percent) and time (hours)                                    |
+| `scale-inhibitor-left` / `scale-inhibitor-time-left`                   | Number:Dimensionless / Number:Time | R      | Scale inhibitor remaining life (percent) and time (days)                                        |
+| `fluffing-roller-left` / `fluffing-roller-time-left`                   | Number:Dimensionless / Number:Time | R      | Fluffing roller remaining life (percent) and time (hours)                                       |
+| `roller-mop-filter-left` / `roller-mop-filter-time-left`               | Number:Dimensionless / Number:Time | R      | Roller mop filter remaining life (percent) and time (hours)                                     |
+| `water-outlet-filter-left` / `water-outlet-filter-time-left`           | Number:Dimensionless / Number:Time | R      | Water outlet filter remaining life (percent) and time (hours)                                   |
+| `washboard-cleaning-left` / `washboard-cleaning-time-left`             | Number:Dimensionless / Number:Time | R      | Washboard cleaning interval remaining (percent) and time (days)                                 |
+| `filter-cleaning-left` / `filter-cleaning-time-left`                   | Number:Dimensionless / Number:Time | R      | Filter cleaning interval remaining (percent) and time (hours)                                   |
+| `rooms`                                                                | String                             | R      | Room segment IDs and names from the current map, for example `3=Kitchen, 7=Living Room`         |
+| `room-cleaning`                                                        | String                             | RW     | Comma-separated room IDs, for example `3,7`; retains the last acknowledged selection            |
+| `map-png`                                                              | Image                              | R      | Rendered PNG map for Basic UI and clients without reliable SVG support                          |
+| `map-svg`                                                              | Image                              | R      | Rendered vector SVG map                                                                         |
+
+Unknown values for mapped states remain visible as `UNKNOWN_<code>`. Roller cover, washboard and onboard water-tank
+status remain numeric until their code meanings are confirmed.
 
 Unknown state codes are preserved as `UNKNOWN_<code>`.
 Device-state codes 19 and above differ between older and newer Dreame protocol variants. The binding selects the state
@@ -308,6 +340,8 @@ Number:Time Vacuum_CleaningTime "Cleaning Time [%.0f %unit%]" { channel="dreame:
 Number:Area Vacuum_CleanedArea "Cleaned Area [%.0f %unit%]" { channel="dreame:vacuum:home:l50:cleaned-area" }
 String Vacuum_TaskStatus "Task Status [%s]" { channel="dreame:vacuum:home:l50:task-status" }
 String Vacuum_BaseStatus "Base Status [%s]" { channel="dreame:vacuum:home:l50:base-status" }
+Number:Dimensionless Vacuum_CleaningProgress "Cleaning Progress [%.0f %%]" { channel="dreame:vacuum:home:l50:cleaning-progress" }
+Number:Dimensionless Vacuum_DryingProgress "Drying Progress [%.0f %%]" { channel="dreame:vacuum:home:l50:drying-progress" }
 
 String Vacuum_SuctionLevel "Suction Level [%s]" { channel="dreame:vacuum:home:l50:suction-level" }
 String Vacuum_WaterVolume "Water Volume [%s]" { channel="dreame:vacuum:home:l50:water-volume" }
@@ -325,6 +359,9 @@ Number:Dimensionless Vacuum_MainBrush "Main Brush [%.0f %%]" { channel="dreame:v
 Number:Dimensionless Vacuum_SideBrush "Side Brush [%.0f %%]" { channel="dreame:vacuum:home:l50:side-brush-left" }
 Number:Dimensionless Vacuum_Filter "Filter [%.0f %%]" { channel="dreame:vacuum:home:l50:filter-left" }
 Number:Dimensionless Vacuum_MopPads "Mop Pads [%.0f %%]" { channel="dreame:vacuum:home:l50:mop-pad-left" }
+Number:Dimensionless Vacuum_TankFilter "Tank Filter [%.0f %%]" { channel="dreame:vacuum:home:l50:tank-filter-left" }
+Number:Dimensionless Vacuum_Squeegee "Squeegee [%.0f %%]" { channel="dreame:vacuum:home:l50:squeegee-left" }
+Number:Dimensionless Vacuum_RollerMopFilter "Roller Mop Filter [%.0f %%]" { channel="dreame:vacuum:home:l50:roller-mop-filter-left" }
 Number:Time Vacuum_TotalCleaningTime "Total Cleaning Time [%.0f %unit%]" { channel="dreame:vacuum:home:l50:total-cleaning-time" }
 Number Vacuum_CleaningCount "Cleaning Count [%.0f]" { channel="dreame:vacuum:home:l50:cleaning-count" }
 Number:Area Vacuum_TotalCleanedArea "Total Cleaned Area [%.0f %unit%]" { channel="dreame:vacuum:home:l50:total-cleaned-area" }

@@ -89,9 +89,9 @@ class DreameVacuumDiagnosticsTest {
 
     @Test
     void limitsPropertySummaryLength() {
-        String payload = "{\"params\":[" + "{\"siid\":1,\"piid\":2},".repeat(40) + "{}]}";
+        String payload = "{\"params\":[" + "{\"siid\":1,\"piid\":2},".repeat(110) + "{}]}";
         String summary = DreameVacuumDiagnostics.describeMessage(payload.getBytes(StandardCharsets.UTF_8));
-        assertEquals(32, summary.split("siid=", -1).length - 1);
+        assertEquals(96, summary.split("siid=", -1).length - 1);
         assertEquals(true, summary.endsWith("truncated=true"));
     }
 

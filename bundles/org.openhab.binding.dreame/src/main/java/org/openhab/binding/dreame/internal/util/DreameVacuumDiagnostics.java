@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.zip.DataFormatException;
 import java.util.zip.Inflater;
@@ -39,9 +40,11 @@ import com.google.gson.JsonPrimitive;
 @NonNullByDefault
 public final class DreameVacuumDiagnostics {
     private static final int MAX_BYTES = 65536;
-    private static final int MAX_PARAMETERS = 32;
+    private static final int MAX_PARAMETERS = 96;
     private static final int MAX_INFLATED_BYTES = 1024 * 1024;
     private static final int MAP_HEADER_SIZE = 27;
+    private static final Set<String> STATUS_DIAGNOSTIC_PROPERTIES = Set.of("4/20", "4/41", "4/58", "4/60", "4/63",
+            "4/64", "27/1", "27/2", "27/3", "27/4", "27/5", "27/9", "27/15", "27/18", "27/26", "27/27");
 
     private DreameVacuumDiagnostics() {
     }
@@ -50,6 +53,15 @@ public final class DreameVacuumDiagnostics {
         return "model=" + (device.isVacuum() ? device.model() : "<unknown>") + ", firmwarePresent="
                 + !device.version().isBlank() + ", ownerPresent=" + !device.masterUid().isBlank() + ", brokerPresent="
                 + !device.bindDomain().isBlank();
+    }
+
+    /** Returns selected validated numeric vacuum status values for TRACE diagnostics. */
+    public static String describeStatusProperties(Map<String, Integer> properties) {
+        StringJoiner values = new StringJoiner(",", "[", "]");
+        properties.entrySet().stream().filter(entry -> STATUS_DIAGNOSTIC_PROPERTIES.contains(entry.getKey()))
+                .sorted(Map.Entry.comparingByKey())
+                .forEach(entry -> values.add(entry.getKey() + "=" + entry.getValue()));
+        return values.length() == 2 ? "[]" : values.toString();
     }
 
     public static String describeMessage(byte[] payload) {
@@ -250,11 +262,16 @@ public final class DreameVacuumDiagnostics {
 
     private static @Nullable Integer propertyValue(String service, String property, JsonObject parameter) {
         int maximum = switch (service + "/" + property) {
-            case "3/1", "9/2", "10/2", "11/1", "16/1", "18/1", "20/1" -> 100;
+            case "3/1", "9/2", "10/2", "11/1", "16/1", "18/1", "20/1", "4/63", "4/64", "17/1", "19/2", "24/2", "25/2",
+                    "26/2", "29/2", "30/2", "31/2", "32/2", "33/2", "35/2", "37/2", "38/2" ->
+                100;
             case "2/2", "4/23" -> 65535;
-            case "4/2", "4/3", "9/1", "10/1", "11/2", "12/2", "12/3", "12/4", "16/2", "18/2", "20/2" ->
+            case "4/2", "4/3", "9/1", "10/1", "11/2", "12/2", "12/3", "12/4", "16/2", "18/2", "20/2", "17/2", "19/1",
+                    "24/1", "25/1", "26/1", "29/1", "30/1", "31/1", "32/1", "33/1", "35/1", "37/1", "38/1" ->
                 Integer.MAX_VALUE;
-            case "2/1", "3/2", "4/1", "4/4", "4/5", "4/7", "4/25", "4/40", "15/3" -> 255;
+            case "2/1", "3/2", "4/1", "4/4", "4/5", "4/7", "4/20", "4/25", "4/40", "4/41", "4/58", "4/60", "15/3",
+                    "27/1", "27/2", "27/3", "27/4", "27/5", "27/9", "27/15", "27/18", "27/26", "27/27" ->
+                255;
             default -> -1;
         };
         if (maximum < 0 || parameter.has("code") && boundedInteger(parameter.get("code"), 0) == null) {

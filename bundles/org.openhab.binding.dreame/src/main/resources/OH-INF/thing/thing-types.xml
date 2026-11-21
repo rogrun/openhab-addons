@@ -75,6 +75,48 @@
 			<channel id="cleaning-count" typeId="vacuum-cleaning-count"/>
 			<channel id="total-cleaned-area" typeId="vacuum-total-cleaned-area"/>
 			<channel id="base-status" typeId="vacuum-base-status"/>
+			<channel id="relocation-status" typeId="vacuum-relocation-status"/>
+			<channel id="low-water-warning" typeId="vacuum-low-water-warning"/>
+			<channel id="task-type" typeId="vacuum-task-type"/>
+			<channel id="drainage-status" typeId="vacuum-drainage-status"/>
+			<channel id="cleaning-progress" typeId="vacuum-cleaning-progress"/>
+			<channel id="drying-progress" typeId="vacuum-drying-progress"/>
+			<channel id="tank-filter-left" typeId="vacuum-tank-filter-left"/>
+			<channel id="tank-filter-time-left" typeId="vacuum-tank-filter-time-left"/>
+			<channel id="silver-ion-left" typeId="vacuum-silver-ion-left"/>
+			<channel id="silver-ion-time-left" typeId="vacuum-silver-ion-time-left"/>
+			<channel id="squeegee-left" typeId="vacuum-squeegee-left"/>
+			<channel id="squeegee-time-left" typeId="vacuum-squeegee-time-left"/>
+			<channel id="dirty-water-channel-left" typeId="vacuum-dirty-water-channel-left"/>
+			<channel id="dirty-water-channel-time-left" typeId="vacuum-dirty-water-channel-time-left"/>
+			<channel id="onboard-dirty-water-tank-left" typeId="vacuum-onboard-dirty-water-tank-left"/>
+			<channel id="onboard-dirty-water-tank-time-left" typeId="vacuum-onboard-dirty-water-tank-time-left"/>
+			<channel id="clean-water-tank-status" typeId="vacuum-clean-water-tank-status"/>
+			<channel id="dirty-water-tank-status" typeId="vacuum-dirty-water-tank-status"/>
+			<channel id="dust-bag-status" typeId="vacuum-dust-bag-status"/>
+			<channel id="detergent-status" typeId="vacuum-detergent-status"/>
+			<channel id="station-drainage-status" typeId="vacuum-station-drainage-status"/>
+			<channel id="water-tank-status" typeId="vacuum-water-tank-status"/>
+			<channel id="hot-water-status" typeId="vacuum-hot-water-status"/>
+			<channel id="dust-bag-drying-status" typeId="vacuum-dust-bag-drying-status"/>
+			<channel id="roller-cover-status" typeId="vacuum-roller-cover-status"/>
+			<channel id="washboard-cleaning-status" typeId="vacuum-washboard-cleaning-status"/>
+			<channel id="deodorizer-left" typeId="vacuum-deodorizer-left"/>
+			<channel id="deodorizer-time-left" typeId="vacuum-deodorizer-time-left"/>
+			<channel id="wheel-dirty-left" typeId="vacuum-wheel-dirty-left"/>
+			<channel id="wheel-dirty-time-left" typeId="vacuum-wheel-dirty-time-left"/>
+			<channel id="scale-inhibitor-left" typeId="vacuum-scale-inhibitor-left"/>
+			<channel id="scale-inhibitor-time-left" typeId="vacuum-scale-inhibitor-time-left"/>
+			<channel id="fluffing-roller-left" typeId="vacuum-fluffing-roller-left"/>
+			<channel id="fluffing-roller-time-left" typeId="vacuum-fluffing-roller-time-left"/>
+			<channel id="roller-mop-filter-left" typeId="vacuum-roller-mop-filter-left"/>
+			<channel id="roller-mop-filter-time-left" typeId="vacuum-roller-mop-filter-time-left"/>
+			<channel id="water-outlet-filter-left" typeId="vacuum-water-outlet-filter-left"/>
+			<channel id="water-outlet-filter-time-left" typeId="vacuum-water-outlet-filter-time-left"/>
+			<channel id="washboard-cleaning-left" typeId="vacuum-washboard-cleaning-left"/>
+			<channel id="washboard-cleaning-time-left" typeId="vacuum-washboard-cleaning-time-left"/>
+			<channel id="filter-cleaning-left" typeId="vacuum-filter-cleaning-left"/>
+			<channel id="filter-cleaning-time-left" typeId="vacuum-filter-cleaning-time-left"/>
 			<channel id="rooms" typeId="vacuum-rooms"/>
 			<channel id="room-cleaning" typeId="vacuum-room-cleaning"/>
 			<channel id="map-png" typeId="vacuum-map-png"/>
@@ -432,6 +474,299 @@
 		<state pattern="%.0f %unit%" readOnly="true"/>
 	</channel-type>
 
+	<channel-type id="vacuum-relocation-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Relocation Status</label>
+		<description>Current device relocation state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-low-water-warning" advanced="true">
+		<item-type>String</item-type>
+		<label>Low Water Warning</label>
+		<description>Clean water warning; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-task-type" advanced="true">
+		<item-type>String</item-type>
+		<label>Task Type</label>
+		<description>Current cleaning task type; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-drainage-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Drainage Status</label>
+		<description>Current base drainage state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-cleaning-progress" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Cleaning Progress</label>
+		<description>Current cleaning progress reported by the vacuum</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-drying-progress" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Drying Progress</label>
+		<description>Current mop drying progress reported by the base station</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-tank-filter-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Tank Filter Remaining</label>
+		<description>Tank filter service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-tank-filter-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Tank Filter Time Remaining</label>
+		<description>Tank filter service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-silver-ion-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Silver Ion Remaining</label>
+		<description>Silver ion module service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-silver-ion-time-left" advanced="true">
+		<item-type unitHint="d">Number:Time</item-type>
+		<label>Silver Ion Time Remaining</label>
+		<description>Silver ion module service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-squeegee-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Squeegee Remaining</label>
+		<description>Squeegee service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-squeegee-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Squeegee Time Remaining</label>
+		<description>Squeegee service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-dirty-water-channel-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Dirty Water Channel Remaining</label>
+		<description>Dirty water channel service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-dirty-water-channel-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Dirty Water Channel Time Remaining</label>
+		<description>Dirty water channel service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-onboard-dirty-water-tank-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Onboard Dirty Water Tank Remaining</label>
+		<description>Onboard dirty water tank service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-onboard-dirty-water-tank-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Onboard Dirty Water Tank Time Remaining</label>
+		<description>Onboard dirty water tank service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-clean-water-tank-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Clean Water Tank Status</label>
+		<description>Clean water tank state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-dirty-water-tank-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Dirty Water Tank Status</label>
+		<description>Dirty water tank state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-dust-bag-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Dust Bag Status</label>
+		<description>Dust bag state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-detergent-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Detergent Status</label>
+		<description>Detergent cartridge state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-station-drainage-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Station Drainage Status</label>
+		<description>Current station drainage state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-water-tank-status" advanced="true">
+		<item-type>Number</item-type>
+		<label>Water Tank Status</label>
+		<description>Raw water tank status code</description>
+		<state pattern="%.0f" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-hot-water-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Hot Water Status</label>
+		<description>Hot water system state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-dust-bag-drying-status" advanced="true">
+		<item-type>String</item-type>
+		<label>Dust Bag Drying Status</label>
+		<description>Dust bag drying state; unrecognized values retain their numeric code</description>
+		<state readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-roller-cover-status" advanced="true">
+		<item-type>Number</item-type>
+		<label>Roller Cover Status</label>
+		<description>Raw roller cover status code</description>
+		<state pattern="%.0f" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-washboard-cleaning-status" advanced="true">
+		<item-type>Number</item-type>
+		<label>Washboard Cleaning Status</label>
+		<description>Raw washboard cleaning status code</description>
+		<state pattern="%.0f" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-deodorizer-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Deodorizer Remaining</label>
+		<description>Deodorizer service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-deodorizer-time-left" advanced="true">
+		<item-type unitHint="d">Number:Time</item-type>
+		<label>Deodorizer Time Remaining</label>
+		<description>Deodorizer service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-wheel-dirty-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Wheel Cleaning Remaining</label>
+		<description>Wheel cleaning interval remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-wheel-dirty-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Wheel Cleaning Time Remaining</label>
+		<description>Wheel cleaning time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-scale-inhibitor-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Scale Inhibitor Remaining</label>
+		<description>Scale inhibitor service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-scale-inhibitor-time-left" advanced="true">
+		<item-type unitHint="d">Number:Time</item-type>
+		<label>Scale Inhibitor Time Remaining</label>
+		<description>Scale inhibitor service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-fluffing-roller-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Fluffing Roller Remaining</label>
+		<description>Fluffing roller service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-fluffing-roller-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Fluffing Roller Time Remaining</label>
+		<description>Fluffing roller service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-roller-mop-filter-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Roller Mop Filter Remaining</label>
+		<description>Roller mop filter service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-roller-mop-filter-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Roller Mop Filter Time Remaining</label>
+		<description>Roller mop filter service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-water-outlet-filter-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Water Outlet Filter Remaining</label>
+		<description>Water outlet filter service life remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-water-outlet-filter-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Water Outlet Filter Time Remaining</label>
+		<description>Water outlet filter service time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-washboard-cleaning-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Washboard Cleaning Remaining</label>
+		<description>Washboard cleaning interval remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-washboard-cleaning-time-left" advanced="true">
+		<item-type unitHint="d">Number:Time</item-type>
+		<label>Washboard Cleaning Time Remaining</label>
+		<description>Washboard cleaning time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-filter-cleaning-left" advanced="true">
+		<item-type unitHint="%">Number:Dimensionless</item-type>
+		<label>Filter Cleaning Remaining</label>
+		<description>Filter cleaning interval remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
+
+	<channel-type id="vacuum-filter-cleaning-time-left" advanced="true">
+		<item-type unitHint="h">Number:Time</item-type>
+		<label>Filter Cleaning Time Remaining</label>
+		<description>Filter cleaning time remaining</description>
+		<state pattern="%.0f %unit%" readOnly="true"/>
+	</channel-type>
 	<channel-type id="vacuum-room-cleaning">
 		<item-type>String</item-type>
 		<label>Room Cleaning</label>

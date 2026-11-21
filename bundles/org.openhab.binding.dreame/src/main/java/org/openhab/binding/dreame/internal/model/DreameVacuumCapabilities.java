@@ -30,8 +30,7 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  */
 @NonNullByDefault
 public final class DreameVacuumCapabilities {
-    // Model identifiers derived from Tasshack/dreame-vacuum DEVICE_INFO, most recently checked at commit
-    // f5b8472b8e2e4bb3dff7bc2a81a5fd594eca9585.
+    // Model identifiers listed by the Home Assistant Dreame Vacuum integration. Legacy identifiers are retained.
     private static final Set<String> SUPPORTED_MODELS = Set.copyOf(Arrays.asList("""
             dreame.vacuum.c102cn
             dreame.vacuum.c102gl
@@ -43,30 +42,12 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.p2028
             dreame.vacuum.p2028a
             dreame.vacuum.p2029
-            dreame.vacuum.p2036
-            dreame.vacuum.p2041
-            dreame.vacuum.p2041o
-            dreame.vacuum.p2114a
-            dreame.vacuum.p2114o
-            dreame.vacuum.p2140
-            dreame.vacuum.p2140a
-            dreame.vacuum.p2140o
-            dreame.vacuum.p2140p
-            dreame.vacuum.p2140q
-            dreame.vacuum.p2148o
-            dreame.vacuum.p2149o
-            dreame.vacuum.p2150a
-            dreame.vacuum.p2150b
-            dreame.vacuum.p2150o
             dreame.vacuum.p2156o
             dreame.vacuum.p2157
             dreame.vacuum.p2187
             dreame.vacuum.p2259
             dreame.vacuum.r2104
             dreame.vacuum.r2205
-            dreame.vacuum.r2209
-            dreame.vacuum.r2210
-            dreame.vacuum.r2211o
             dreame.vacuum.r2212
             dreame.vacuum.r2215
             dreame.vacuum.r2216o
@@ -80,6 +61,7 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2232d
             dreame.vacuum.r2233
             dreame.vacuum.r2235
+            dreame.vacuum.r2235a
             dreame.vacuum.r2240
             dreame.vacuum.r2243
             dreame.vacuum.r2246
@@ -95,7 +77,6 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2253t
             dreame.vacuum.r2253u
             dreame.vacuum.r2253w
-            dreame.vacuum.r2254
             dreame.vacuum.r2257o
             dreame.vacuum.r2260
             dreame.vacuum.r2263
@@ -131,15 +112,14 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2363a
             dreame.vacuum.r2363n
             dreame.vacuum.r2364
+            dreame.vacuum.r23646
             dreame.vacuum.r2364a
             dreame.vacuum.r2367
             dreame.vacuum.r2375
             dreame.vacuum.r2377
             dreame.vacuum.r2380
-            dreame.vacuum.r2380r
             dreame.vacuum.r2382a
             dreame.vacuum.r2382k
-            dreame.vacuum.r2382r
             dreame.vacuum.r2383a
             dreame.vacuum.r2383k
             dreame.vacuum.r2385
@@ -160,6 +140,7 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2401u
             dreame.vacuum.r2412
             dreame.vacuum.r2416
+            dreame.vacuum.r24162
             dreame.vacuum.r2416a
             dreame.vacuum.r2416c
             dreame.vacuum.r2416f
@@ -169,14 +150,13 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2422
             dreame.vacuum.r2422a
             dreame.vacuum.r2422b
+            dreame.vacuum.r2422c
             dreame.vacuum.r2423
             dreame.vacuum.r2423a
             dreame.vacuum.r2424
             dreame.vacuum.r2426
             dreame.vacuum.r2427
             dreame.vacuum.r2427a
-            dreame.vacuum.r2427c
-            dreame.vacuum.r2427r
             dreame.vacuum.r2430a
             dreame.vacuum.r2430u
             dreame.vacuum.r2432
@@ -186,7 +166,6 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2438a
             dreame.vacuum.r2438b
             dreame.vacuum.r2438i
-            dreame.vacuum.r2438r
             dreame.vacuum.r2440
             dreame.vacuum.r2441
             dreame.vacuum.r2443
@@ -204,6 +183,7 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2462
             dreame.vacuum.r2462a
             dreame.vacuum.r2465a
+            dreame.vacuum.r2465b
             dreame.vacuum.r2465h
             dreame.vacuum.r2467
             dreame.vacuum.r2469a
@@ -219,15 +199,19 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2487
             dreame.vacuum.r2488
             dreame.vacuum.r2489
+            dreame.vacuum.r24896
+            dreame.vacuum.r24898
             dreame.vacuum.r2489a
             dreame.vacuum.r2489b
             dreame.vacuum.r2489c
+            dreame.vacuum.r2489d
             dreame.vacuum.r2489e
             dreame.vacuum.r2489f
             dreame.vacuum.r2489h
             dreame.vacuum.r2489j
             dreame.vacuum.r2489k
             dreame.vacuum.r2489l
+            dreame.vacuum.r2489p
             dreame.vacuum.r2489q
             dreame.vacuum.r2489s
             dreame.vacuum.r2489t
@@ -241,6 +225,7 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2493
             dreame.vacuum.r2495
             dreame.vacuum.r2501
+            dreame.vacuum.r2501l
             dreame.vacuum.r2501p
             dreame.vacuum.r2502
             dreame.vacuum.r2504
@@ -249,11 +234,18 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2507
             dreame.vacuum.r2508
             dreame.vacuum.r2513
+            dreame.vacuum.r25135
             dreame.vacuum.r2513a
+            dreame.vacuum.r2513f
             dreame.vacuum.r2513h
+            dreame.vacuum.r2513k
+            dreame.vacuum.r2513p
+            dreame.vacuum.r2513u
             dreame.vacuum.r2515
             dreame.vacuum.r2518
+            dreame.vacuum.r2518a
             dreame.vacuum.r2518f
+            dreame.vacuum.r2518j
             dreame.vacuum.r2518p
             dreame.vacuum.r2519a
             dreame.vacuum.r2520
@@ -274,10 +266,12 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2532d
             dreame.vacuum.r2532h
             dreame.vacuum.r2532v
+            dreame.vacuum.r2532w
             dreame.vacuum.r2532z
             dreame.vacuum.r2538a
             dreame.vacuum.r2538z
             dreame.vacuum.r2548
+            dreame.vacuum.r25513
             dreame.vacuum.r2551a
             dreame.vacuum.r2551h
             dreame.vacuum.r2553
@@ -292,6 +286,7 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2562u
             dreame.vacuum.r2563b
             dreame.vacuum.r2563v
+            dreame.vacuum.r25642
             dreame.vacuum.r2564b
             dreame.vacuum.r2564s
             dreame.vacuum.r2564z
@@ -319,15 +314,193 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r2582h
             dreame.vacuum.r2582k
             dreame.vacuum.r2584g
+            dreame.vacuum.r25856
+            dreame.vacuum.r25857
+            dreame.vacuum.r25858
+            dreame.vacuum.r25859
             dreame.vacuum.r500a
+            dreame.vacuum.r500b
+            dreame.vacuum.r500b1
+            dreame.vacuum.r500c
+            dreame.vacuum.r500c1
+            dreame.vacuum.r500da
+            dreame.vacuum.r500n
+            dreame.vacuum.r500vh
+            dreame.vacuum.r500vp
+            dreame.vacuum.r500xb
+            dreame.vacuum.r500yb
+            dreame.vacuum.r500yc
+            dreame.vacuum.r500ye
+            dreame.vacuum.r500yt
+            dreame.vacuum.r500za
+            dreame.vacuum.r500zc
+            dreame.vacuum.r500zh
+            dreame.vacuum.r500zk
             dreame.vacuum.r5016
+            dreame.vacuum.r501ba
+            dreame.vacuum.r501bc
+            dreame.vacuum.r501bk
+            dreame.vacuum.r501bt
+            dreame.vacuum.r501da
             dreame.vacuum.r501h
+            dreame.vacuum.r501he
+            dreame.vacuum.r501s
+            dreame.vacuum.r501st
+            dreame.vacuum.r501t
+            dreame.vacuum.r501tt
+            dreame.vacuum.r501ua
+            dreame.vacuum.r501vr
+            dreame.vacuum.r501vt
+            dreame.vacuum.r501w
+            dreame.vacuum.r501wu
+            dreame.vacuum.r5020a
+            dreame.vacuum.r5021a
+            dreame.vacuum.r5021b
+            dreame.vacuum.r5021c
+            dreame.vacuum.r5021h
+            dreame.vacuum.r5021k
+            dreame.vacuum.r5021s
+            dreame.vacuum.r5021t
+            dreame.vacuum.r5021u
+            dreame.vacuum.r5022a
+            dreame.vacuum.r5023a
+            dreame.vacuum.r5023e
+            dreame.vacuum.r5024b
+            dreame.vacuum.r5024t
+            dreame.vacuum.r5025b
+            dreame.vacuum.r5025t
+            dreame.vacuum.r502ca
+            dreame.vacuum.r502k3
+            dreame.vacuum.r502ka
+            dreame.vacuum.r502ke
+            dreame.vacuum.r502la
+            dreame.vacuum.r502le
+            dreame.vacuum.r502lh
+            dreame.vacuum.r502mf
+            dreame.vacuum.r502mn
+            dreame.vacuum.r502mt
+            dreame.vacuum.r502va
+            dreame.vacuum.r5039
+            dreame.vacuum.r50391
+            dreame.vacuum.r50393
+            dreame.vacuum.r50395
+            dreame.vacuum.r50397
+            dreame.vacuum.r50398
+            dreame.vacuum.r50399
             dreame.vacuum.r5039a
+            dreame.vacuum.r5039e
+            dreame.vacuum.r5039f
+            dreame.vacuum.r5039h
+            dreame.vacuum.r5039r
+            dreame.vacuum.r5039w
+            dreame.vacuum.r50485
+            dreame.vacuum.r5048a
+            dreame.vacuum.r5048h
+            dreame.vacuum.r5049
+            dreame.vacuum.r50573
+            dreame.vacuum.r5057a
+            dreame.vacuum.r5057k
+            dreame.vacuum.r5057r
+            dreame.vacuum.r5061
+            dreame.vacuum.r5061a
+            dreame.vacuum.r5061e
+            dreame.vacuum.r50625
+            dreame.vacuum.r5062a
+            dreame.vacuum.r5062h
+            dreame.vacuum.r5062k
+            dreame.vacuum.r5064t
+            dreame.vacuum.r5064u
+            dreame.vacuum.r5082a
+            dreame.vacuum.r5082c
+            dreame.vacuum.r5085
+            dreame.vacuum.r50855
             dreame.vacuum.r5089b
+            dreame.vacuum.r5089u
+            dreame.vacuum.r5090a
+            dreame.vacuum.r5099
+            dreame.vacuum.r5099a
+            dreame.vacuum.r5099e
+            dreame.vacuum.r5099g
+            dreame.vacuum.r5099h
+            dreame.vacuum.r5099k
+            dreame.vacuum.r5104h
+            dreame.vacuum.r5109f
             dreame.vacuum.r510a
+            dreame.vacuum.r510b
+            dreame.vacuum.r510b1
+            dreame.vacuum.r510c
+            dreame.vacuum.r510c1
+            dreame.vacuum.r510n
             dreame.vacuum.r5117
+            dreame.vacuum.r512g
+            dreame.vacuum.r5139
+            dreame.vacuum.r51395
+            dreame.vacuum.r5149
+            dreame.vacuum.r5185
+            dreame.vacuum.r51855
+            dreame.vacuum.r5189j
+            dreame.vacuum.r5189u
+            dreame.vacuum.r520b
+            dreame.vacuum.r520b1
+            dreame.vacuum.r520c
+            dreame.vacuum.r520c1
+            dreame.vacuum.r520n
+            dreame.vacuum.r522kf
+            dreame.vacuum.r5239f
+            dreame.vacuum.r5299
+            dreame.vacuum.r530jb
+            dreame.vacuum.r530ua
+            dreame.vacuum.r53148
+            dreame.vacuum.r5314a
+            dreame.vacuum.r5314s
+            dreame.vacuum.r5314z
+            dreame.vacuum.r531ra
+            dreame.vacuum.r531rh
+            dreame.vacuum.r53456
             dreame.vacuum.r5345b
+            dreame.vacuum.r5345e
+            dreame.vacuum.r540ga
+            dreame.vacuum.r540jb
+            dreame.vacuum.r540tb
+            dreame.vacuum.r54125
+            dreame.vacuum.r5412a
+            dreame.vacuum.r5412v
+            dreame.vacuum.r54136
+            dreame.vacuum.r5413a
+            dreame.vacuum.r5413v
+            dreame.vacuum.r542q
             dreame.vacuum.r6001a
+            dreame.vacuum.r6011
+            dreame.vacuum.r6012
+            dreame.vacuum.r6015a
+            dreame.vacuum.r6016
+            dreame.vacuum.r6017b
+            dreame.vacuum.r6017q
+            dreame.vacuum.r6018a
+            dreame.vacuum.r6018c
+            dreame.vacuum.r6047a
+            dreame.vacuum.r60u2k
+            dreame.vacuum.r6101h
+            dreame.vacuum.r6111
+            dreame.vacuum.r6112
+            dreame.vacuum.r6116
+            dreame.vacuum.r6117j
+            dreame.vacuum.r6216
+            dreame.vacuum.r63013
+            dreame.vacuum.r63014
+            dreame.vacuum.r63015
+            dreame.vacuum.r63017
+            dreame.vacuum.r6301a
+            dreame.vacuum.r6301h
+            dreame.vacuum.r6301r
+            dreame.vacuum.r6301v
+            dreame.vacuum.r64015
+            dreame.vacuum.r64017
+            dreame.vacuum.r64018
+            dreame.vacuum.r6401c
+            dreame.vacuum.r6401k
+            dreame.vacuum.r6401r
+            dreame.vacuum.r6401v
             dreame.vacuum.r9301
             dreame.vacuum.r9302
             dreame.vacuum.r9304
@@ -359,6 +532,8 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r9428
             dreame.vacuum.r9430
             dreame.vacuum.r9434
+            dreame.vacuum.r94345
+            dreame.vacuum.r94346
             dreame.vacuum.r9434h
             dreame.vacuum.r9434j
             dreame.vacuum.r9434l
@@ -368,8 +543,10 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r9445d
             dreame.vacuum.r9445g
             dreame.vacuum.r9446a
+            dreame.vacuum.r9446b
             dreame.vacuum.r9446c
             dreame.vacuum.r9446h
+            dreame.vacuum.r9446j
             dreame.vacuum.r9446k
             dreame.vacuum.r9455
             dreame.vacuum.r9455z
@@ -395,20 +572,46 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r9504a
             dreame.vacuum.r9506
             dreame.vacuum.r9507b
+            dreame.vacuum.r9508b
+            dreame.vacuum.r9513
+            dreame.vacuum.r9515a
+            dreame.vacuum.r9515e
             dreame.vacuum.r9516
             dreame.vacuum.r9517
             dreame.vacuum.r9518
             dreame.vacuum.r9519
+            dreame.vacuum.r95239
             dreame.vacuum.r9523a
             dreame.vacuum.r9523b
             dreame.vacuum.r9523c
             dreame.vacuum.r9523h
             dreame.vacuum.r9523k
+            dreame.vacuum.r9523t
+            dreame.vacuum.r9523u
+            dreame.vacuum.r95249
             dreame.vacuum.r9524a
             dreame.vacuum.r9524b
             dreame.vacuum.r9524c
             dreame.vacuum.r9524h
+            dreame.vacuum.r9524j
             dreame.vacuum.r9524k
+            dreame.vacuum.r9524m
+            dreame.vacuum.r95265
+            dreame.vacuum.r95266
+            dreame.vacuum.r95267
+            dreame.vacuum.r9526a
+            dreame.vacuum.r9526c
+            dreame.vacuum.r9526h
+            dreame.vacuum.r9526k
+            dreame.vacuum.r9527
+            dreame.vacuum.r95275
+            dreame.vacuum.r95276
+            dreame.vacuum.r95277
+            dreame.vacuum.r95278
+            dreame.vacuum.r95279
+            dreame.vacuum.r9527a
+            dreame.vacuum.r9527f
+            dreame.vacuum.r9527v
             dreame.vacuum.r95285
             dreame.vacuum.r9528a
             dreame.vacuum.r9528h
@@ -417,18 +620,155 @@ public final class DreameVacuumCapabilities {
             dreame.vacuum.r9533t
             dreame.vacuum.r9535a
             dreame.vacuum.r9535h
+            dreame.vacuum.r9535n
+            dreame.vacuum.r9537a
+            dreame.vacuum.r9537h
+            dreame.vacuum.r95385
+            dreame.vacuum.r9538a
+            dreame.vacuum.r9538b
+            dreame.vacuum.r9538c
+            dreame.vacuum.r9538e
+            dreame.vacuum.r9538h
+            dreame.vacuum.r9538k
+            dreame.vacuum.r9538l
+            dreame.vacuum.r9538t
+            dreame.vacuum.r9538u
             dreame.vacuum.r9540n
+            dreame.vacuum.r95425
             dreame.vacuum.r9542a
             dreame.vacuum.r9542b
+            dreame.vacuum.r9542h
             dreame.vacuum.r9542t
             dreame.vacuum.r95475
+            dreame.vacuum.r95476
             dreame.vacuum.r9547a
             dreame.vacuum.r9547c
             dreame.vacuum.r9547h
             dreame.vacuum.r9547k
             dreame.vacuum.r9548
             dreame.vacuum.r9551
-                        """.strip().split("\\R")));
+            mova.vacuum.r2430
+            mova.vacuum.r2430a
+            mova.vacuum.r2430u
+            mova.vacuum.r2432b
+            mova.vacuum.r2462a
+            mova.vacuum.r2475a
+            mova.vacuum.r2475h
+            mova.vacuum.r2475t
+            mova.vacuum.r24916
+            mova.vacuum.r2491a
+            mova.vacuum.r2519a
+            mova.vacuum.r2525a
+            mova.vacuum.r2525e
+            mova.vacuum.r2525h
+            mova.vacuum.r2533h
+            mova.vacuum.r2534h
+            mova.vacuum.r2535
+            mova.vacuum.r2561
+            mova.vacuum.r2567a
+            mova.vacuum.r2569c
+            mova.vacuum.r2570
+            mova.vacuum.r2582a
+            mova.vacuum.r2582c
+            mova.vacuum.r2582h
+            mova.vacuum.r2582k
+            mova.vacuum.r2587a
+            mova.vacuum.r2599
+            mova.vacuum.r2599h
+            mova.vacuum.r2599k
+            mova.vacuum.r2599u
+            mova.vacuum.r5730
+            mova.vacuum.r5730c
+            mova.vacuum.r5732a
+            mova.vacuum.r5747
+            mova.vacuum.r5765h
+            mova.vacuum.r5765k
+            mova.vacuum.r5765p
+            mova.vacuum.r5765q
+            mova.vacuum.r5765u
+            mova.vacuum.r5766
+            mova.vacuum.r5766h
+            mova.vacuum.r5766k
+            mova.vacuum.r5766q
+            mova.vacuum.r5769
+            mova.vacuum.r57695
+            mova.vacuum.r57698
+            mova.vacuum.r5769a
+            mova.vacuum.r5769f
+            mova.vacuum.r5769g
+            mova.vacuum.r5769h
+            mova.vacuum.r5769q
+            mova.vacuum.r5769t
+            mova.vacuum.r5770
+            mova.vacuum.r5770a
+            mova.vacuum.r5770g
+            mova.vacuum.r5770h
+            mova.vacuum.r5770q
+            mova.vacuum.r5770t
+            mova.vacuum.r5871
+            mova.vacuum.r58715
+            mova.vacuum.r590q
+            mova.vacuum.r590qf
+            mova.vacuum.r5977a
+            mova.vacuum.r5977c
+            mova.vacuum.r5977f
+            mova.vacuum.r5977g
+            mova.vacuum.r5977h
+            mova.vacuum.r5977k
+            mova.vacuum.r5977t
+            mova.vacuum.r5978a
+            mova.vacuum.r5978h
+            mova.vacuum.r5978q
+            mova.vacuum.r59795
+            mova.vacuum.r59796
+            mova.vacuum.r59797
+            mova.vacuum.r59799
+            mova.vacuum.r5979a
+            mova.vacuum.r5979f
+            mova.vacuum.r5979g
+            mova.vacuum.r5979h
+            mova.vacuum.r5979t
+            mova.vacuum.r5979u
+            mova.vacuum.r67095
+            mova.vacuum.r6709a
+            mova.vacuum.r6709c
+            mova.vacuum.r6709g
+            mova.vacuum.r6709h
+            mova.vacuum.r6710a
+            mova.vacuum.r6710g
+            mova.vacuum.r6710h
+            mova.vacuum.r6710t
+            mova.vacuum.r9416
+            mova.vacuum.r94165
+            mova.vacuum.r9416d
+            mova.vacuum.r9427
+            mova.vacuum.r9427h
+            mova.vacuum.r9427x
+            mova.vacuum.r9473
+            mova.vacuum.r9473e
+            mova.vacuum.r9474
+            mova.vacuum.r94745
+            mova.vacuum.r9480
+            mova.vacuum.r9482
+            mova.vacuum.r9503
+            mova.vacuum.r95046
+            mova.vacuum.r95049
+            mova.vacuum.r9504a
+            mova.vacuum.r95406
+            mova.vacuum.r9540a
+            mova.vacuum.r9540h
+            mova.vacuum.r9540k
+            mova.vacuum.r9540n
+            mova.vacuum.r9540u
+            mova.vacuum.r9543
+            mova.vacuum.r9543a
+            mova.vacuum.r9543b
+            mova.vacuum.r95445
+            mova.vacuum.r9544a
+            mova.vacuum.r9544b
+            mova.vacuum.r9544t
+            mova.vacuum.r9549
+            """.strip().split("\\R")));
 
     // State-schema capabilities synchronized with Tasshack/dreame-vacuum DEVICE_INFO at commit
     // 8556ef85132c3d73a5288dd00738636392dac633.

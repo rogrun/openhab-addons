@@ -31,6 +31,6 @@ public record DreameDevice(String id, String name, String model, String version,
     }
 
     public static boolean isVacuumModel(String model) {
-        return model.matches("dreame\\.vacuum\\.[A-Za-z0-9_-]{1,64}");
+        return model.matches("(?:dreame|mova)\\.vacuum\\.[A-Za-z0-9_-]{1,64}");
     }
 }

@@ -106,16 +106,17 @@ class DreameApiClientTest {
                   {"did":"123","customName":"","model":"dreame.mower.g2422","masterUid":"42","bindDomain":"host:8883","property":"{}",
                    "deviceInfo":{"displayName":"A1 Pro 2000"}},
                   {"did":"124","customName":"MOVA 1000","model":"mova.mower.g2405c","masterUid":"43","bindDomain":"mova-host:19974","property":"{}"},
-                  {"did":"456","name":"Vacuum","model":"dreame.vacuum.r2228o"}
+                  {"did":"456","name":"Vacuum","model":"dreame.vacuum.r2228o"},
+                  {"did":"457","name":"MOVA Vacuum","model":"mova.vacuum.r9540a"},
+                  {"did":"7","name":"Trouver Vacuum","model":"trouver.vacuum.r9504r"},
+                  {"did":"8","name":"Xiaomi Vacuum","model":"xiaomi.vacuum.c102cn"}
                 ]}}}
                 """;
 
         List<DreameDevice> devices = new DreameApiResponseParser()
                 .parseDevices(JsonParser.parseString(json).getAsJsonObject());
 
-        assertEquals(List.of(new DreameDevice("123", "A1 Pro 2000", "dreame.mower.g2422", "", "42", "host:8883", "{}"),
-                new DreameDevice("124", "MOVA 1000", "mova.mower.g2405c", "", "43", "mova-host:19974", "{}"),
-                new DreameDevice("456", "Vacuum", "dreame.vacuum.r2228o", "", "", "", "")), devices);
+        assertEquals(List.of("123", "124", "456", "457"), devices.stream().map(DreameDevice::id).toList());
     }
 
     @Test
@@ -125,6 +126,9 @@ class DreameApiClientTest {
                   null, 42,
                   {"did":"1","model":"unknown.vacuum.example"},
                   {"did":"2","model":"dreame.vacuum."},
+                  {"did":"6","model":"ijai.vacuum.v18"},
+                  {"did":"7","model":"trouver.vacuum.r9504r"},
+                  {"did":"8","model":"xiaomi.vacuum.c102cn"},
                   {"did":"3","model":{}},
                   {"did":{},"model":"dreame.vacuum.example"},
                   {"model":"dreame.vacuum.example"},

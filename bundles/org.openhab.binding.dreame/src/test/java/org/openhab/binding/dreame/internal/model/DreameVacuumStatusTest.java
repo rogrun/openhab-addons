@@ -180,7 +180,7 @@ class DreameVacuumStatusTest {
         assertTrue(read(" ".repeat(65537)).isEmpty());
         assertTrue(read("[".repeat(33) + "0" + "]".repeat(33)).isEmpty());
         assertTrue(
-                read("{\"method\":\"properties_changed\",\"params\":[" + "{},".repeat(32) + property + "]}").isEmpty());
+                read("{\"method\":\"properties_changed\",\"params\":[" + "{},".repeat(96) + property + "]}").isEmpty());
     }
 
     private static Map<String, Integer> read(String json) {
